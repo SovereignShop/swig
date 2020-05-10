@@ -52,6 +52,6 @@
      (re-posh/dispatch-sync [::e/initialize (hiccup->facts layout)])))
 
 #?(:cljs
-   (defn render [db view-id]
-     (reagent/render [views/root-component db view-id]
+   (defn render [view-id]
+     (reagent/render [views/root-component view-id]
                      (.getElementById js/document "app"))))
