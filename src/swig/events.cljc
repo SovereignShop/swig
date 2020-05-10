@@ -152,53 +152,61 @@
 #?(:cljs
    (re-posh/reg-event-ds
     ::enter-fullscreen
-    [db [_ id]]
-    (let [tab (find-ancestor (d/entity db id) ancestor-type)]
-      (enter-fullscreen db tab))))
+    (fn reg-enter-fullscreen
+      [db [_ id]]
+      (let [tab (find-ancestor (d/entity db id) ancestor-type)]
+        (enter-fullscreen db tab)))))
 
 #?(:cljs
    (re-posh/reg-event-ds
     ::exit-fullscreen
-    [db [_ id]]
-    (let [tab (find-ancestor (d/entity db id) :swig.type/tab)]
-      (exit-fullscreen db tab))))
+    (fn reg-exit-fullscreen
+      [db [_ id]]
+      (let [tab (find-ancestor (d/entity db id) :swig.type/tab)]
+        (exit-fullscreen db tab)))))
 
 #?(:cljs
    (re-posh/reg-event-ds
     ::move-tab
-    [db [_ tab-id view-id]]
-    (move-tab db tab-id view-ids)))
+    (fn move-tab
+      [db [_ tab-id view-id]]
+      (move-tab db tab-id view-ids))))
 
 #?(:cljs
    (re-posh/reg-event-ds
     ::kill-tab
-    [db [_ id]]
-    (let [tab (find-ancestor (d/entity db id) :swig.type/tab)]
-      (kill-tab db id))))
+    (fn reg-kill-tab
+      [db [_ id]]
+      (let [tab (find-ancestor (d/entity db id) :swig.type/tab)]
+        (kill-tab db id)))))
 
 #?(:cljs
    (re-posh/reg-event-ds
     ::delete-tab
-    [db [_ id]]
-    (let [tab (find-ancestor (d/entity db id) :swig.type/tab)]
-      (delete-tab db tab))))
+    (fn reg-delete-tab
+      [db [_ id]]
+      (let [tab (find-ancestor (d/entity db id) :swig.type/tab)]
+        (delete-tab db tab)))))
 
 #?(:cljs
    (re-posh/reg-event-ds
     ::divide-tab
-    [db [_ id orientation]]
-    (let [tab-id (:db/id (find-ancestor (d/entity db id) :swig.type/tab))]
-      (divide-tab db tab-id orientation))))
+    (fn reg-divide-tab
+      [db [_ id orientation]]
+      (let [tab-id (:db/id (find-ancestor (d/entity db id) :swig.type/tab))]
+        (divide-tab db tab-id orientation)))))
 
 #?(:cljs
    (re-posh/reg-event-ds
     ::join-views
-    [db [_ id]]
-    (let [split (find-ancestor (d/entity db id) :swit.type/split)]
-      (join-views db split))))
+    (fn reg-join-views
+      [db [_ id]]
+      (let [split (find-ancestor (d/entity db id) :swit.type/split)]
+        (join-views db split)))))
 
 #?(:cljs
    (re-posh/reg-event-ds
     ::set-split-percent
-    [db [_ split-id split-percent]]
-    (set-split-percent split-id split-percent)))
+    (fn reg-set-split-percent
+      [db [_ split-id split-percent]]
+      (set-split-percent split-id split-percent))))
