@@ -31,7 +31,7 @@
    [:div (str "No method found for props:" props)]))
 
 #?(:cljs
-   (defmethod :swig.operation/divide-horizontal [{:keys [:db/id]}]
+   (defmethod dispatch :swig.operation/divide-horizontal [{:keys [:db/id]}]
      ^{:key (str "id-" id)}
      [md-icon-button
       :size :smaller
@@ -40,7 +40,7 @@
                   (re-posh/dispatch [::events/divide-tab id :horizontal]))]))
 
 #?(:cljs
-   (defmethod :swig.operation/divide-vertical [{:keys [:db/id]}]
+   (defmethod dispatch :swig.operation/divide-vertical [{:keys [:db/id]}]
      ^{:key (str "id-" id)}
      [md-icon-button
       :size :smaller
@@ -49,7 +49,7 @@
                   (re-posh/dispatch [::events/divide-tab id :vertical]))]))
 
 #?(:cljs
-   (defmethod :swig.operation/fullscreen [{:keys [:db/id]}]
+   (defmethod dispatch :swig.operation/fullscreen [{:keys [:db/id]}]
      [md-icon-button
       :size :smaller
       :md-icon-name "zmdi-fullscreen"
@@ -57,7 +57,7 @@
                   (re-posh/dispatch [::events/enter-fullscreen id]))]))
 
 #?(:cljs
-   (defmethod :swig.operation/delete [{:keys [:db/id]}]
+   (defmethod dispatch :swig.operation/delete [{:keys [:db/id]}]
      ^{:key (str "id-" id)}
      [md-icon-button
       :size :smaller
@@ -66,7 +66,7 @@
                   (re-posh/dispatch [::events/kill-tab id]))]))
 
 #?(:cljs
-   (defmethod :swig.operation/swap [{:keys [:db/id]}]
+   (defmethod dispatch :swig.operation/swap [{:keys [:db/id]}]
      ^{:key (str "id-" id)}
      [md-icon-button
       :size :smaller

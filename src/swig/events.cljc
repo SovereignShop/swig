@@ -120,7 +120,8 @@
 (defn join-views
   "Join the two view children of a split into a single view."
   [db split]
-  (let [view-ids
+  (let [split-id (:db/id split)
+        view-ids
         (d/q '[:find [?view-id ...]
                :in $ ?split-id
                :where
@@ -154,7 +155,7 @@
     ::enter-fullscreen
     (fn reg-enter-fullscreen
       [db [_ id]]
-      (let [tab (find-ancestor (d/entity db id) ancestor-type)]
+      (let [tab (find-ancestor (d/entity db id) :swig.type/tab)]
         (enter-fullscreen db tab)))))
 
 #?(:cljs
@@ -170,7 +171,7 @@
     ::move-tab
     (fn move-tab
       [db [_ tab-id view-id]]
-      (move-tab db tab-id view-ids))))
+      (move-tab tab-id view-id))))
 
 #?(:cljs
    (re-posh/reg-event-ds
