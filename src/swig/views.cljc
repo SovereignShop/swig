@@ -17,7 +17,7 @@
 (def root-view [:swig/ident :swig/root-view])
 
 (defn swig-dispatch-fn
-  ([props]
+  ([db props]
    (:swig/type props))
   ([props child]
    (:swig/type props)))
@@ -25,22 +25,24 @@
 (defmulti dispatch #'swig-dispatch-fn)
 
 (defmethod dispatch :default
-  ([props]
+  ([db props]
    [:div (str "No method found for props:" props)])
-  ([props child]
+  ([db props child]
    [:div (str "No method found for props:" props)]))
 
 #?(:cljs
-   (defmethod dispatch :swig.operation/divide-horizontal [{:keys [:db/id]}]
+   (defmethod dispatch :swig.operation/divide-horizontal
+     [db {:keys [:db/id]}]
      ^{:key (str "id-" id)}
      [md-icon-button
       :size :smaller
-      :md-icon-name "zmdi-swap-horizontal"
+      :md-icon-name "zmdi-swap"
       :on-click (fn [event]
                   (re-posh/dispatch [::events/divide-tab id :horizontal]))]))
 
 #?(:cljs
-   (defmethod dispatch :swig.operation/divide-vertical [{:keys [:db/id]}]
+   (defmethod dispatch :swig.operation/divide-vertical
+     [db {:keys [:db/id]}]
      ^{:key (str "id-" id)}
      [md-icon-button
       :size :smaller
@@ -49,24 +51,27 @@
                   (re-posh/dispatch [::events/divide-tab id :vertical]))]))
 
 #?(:cljs
-   (defmethod dispatch :swig.operation/fullscreen [{:keys [:db/id]}]
+   (defmethod dispatch :swig.operation/fullscreen
+     [db {:keys [:db/id]}]
      [md-icon-button
       :size :smaller
       :md-icon-name "zmdi-fullscreen"
-      :on-click (fn [event]
-                  (re-posh/dispatch [::events/enter-fullscreen id]))]))
+      :on-click]))
 
 #?(:cljs
-   (defmethod dispatch :swig.operation/delete [{:keys [:db/id]}]
+   (defmethod dispatch :swig.operation/delete
+     [db {:keys [:db/id]}]
      ^{:key (str "id-" id)}
      [md-icon-button
       :size :smaller
+
       :md-icon-name "zmdi-close"
       :on-click (fn [event]
                   (re-posh/dispatch [::events/kill-tab id]))]))
 
 #?(:cljs
-   (defmethod dispatch :swig.operation/swap [{:keys [:db/id]}]
+   (defmethod dispatch :swig.operation/swap
+     [db {:keys [:db/id]}]
      ^{:key (str "id-" id)}
      [md-icon-button
       :size :smaller
@@ -76,16 +81,30 @@
                   (re-posh/dispatch [::events/swap-views id]))]))
 
 #?(:cljs
+   (defmethod dispatch :swig.operation/join
+     [db {:keys [:db/id]}]
+     ^{:keys (str "id-" id)}
+     [md-icon-button
+      :size :smaller
+      :md-icon-name "zmdi-unfold-less"
+      :on-click (fn [event]
+                  (.stopPropagation event)
+                  (re-posh/dispatch [::events/join-views id]))]))
+
+
+#?(:cljs
    (defmethod dispatch :swig.type/tab
-     ([{:keys [:db/id :swig/ident :swig.dispatch/handler] :as tab}]
-      (let [child      (first @(re-posh/subscribe [::subs/get-children id [:swig.type/split
-                                                                           :swig.type/view]]))
+     ([db {:keys [:db/id :swig/ident :swig.dispatch/handler] :as tab}]
+      (let [child      (first @(re-posh/subscribe
+                                [::subs/get-children id [:swig.type/split
+                                                         :swig.type/view]]))
             fns        (methods dispatch)
             handler-fn (get fns handler (get fns ident))
-            ops      (set @(re-posh/subscribe [::subs/get-op-names (->> tab :swig.tab/ops (map :db/id))]))]
+            ops        (:swig.tab/ops tab)]
         [h-box
          :style {:flex "1 1 0%"}
          :children
+        
          [^{:key (str "exit-fullscreen-" id)}
           [md-icon-button
            :style (if (:swig.tab/fullscreen tab)
@@ -96,36 +115,37 @@
            :md-icon-name "zmdi-close"
            :on-click (fn [event]
                        (re-posh/dispatch [::events/exit-fullscreen id]))]
-          (doall
-           (for [op ops]
-             (dispatch op)))
+          [v-box
+           :children
+           (doall
+            (for [op ops]
+              (dispatch db @(re-posh/subscribe [::subs/get-operation (:db/id op)]))))]
           (when (seq ops)
             ^{:key (str "line-" id)}
             [line])
           (if handler-fn
             (if child
-              (handler-fn tab child)
-              (handler-fn tab))
+              (handler-fn db tab child)
+              (handler-fn db tab))
             (if child
-              (dispatch child)
+              (dispatch db child)
               [:div "No handler or child found for tab:" tab]))]]))))
 
 #?(:cljs
    (defmethod dispatch :swig.type/window
-     ([{:keys [:swig/ident] :as props}]
-      ((get-method dispatch ident) props))
-     ([{:keys [:swig/ident] :as props} child]
-      ((get-method dispatch ident) props child))))
+     ([db {:keys [:swig/ident] :as props}]
+      ((get-method dispatch ident) db props))
+     ([db {:keys [:swig/ident] :as props} child]
+      ((get-method dispatch ident) db props child))))
 
 #?(:cljs
-   (defn tab-label-fn [tab]
+   (defn tab-label-fn [db tab]
      (let [{:keys [:db/id]} (:swig.tab/label tab)]
-       (dispatch @(re-posh/subscribe [::subs/get-cell id])))))
-
+       (dispatch db @(re-posh/subscribe [::subs/get-cell id])))))
 
 #?(:cljs
    (defmethod dispatch :swig.type/view
-     [{:keys [:swig.dispatch/handler] :as props}]
+     [db {:keys [:swig.dispatch/handler] :as props}]
      (let [view-id       (:db/id props)
            {view-ops :swig.view/ops view-type :swig.view/tab-type}
            @(re-posh/subscribe [::subs/get-view-ops view-id])
@@ -146,7 +166,7 @@
               (doall
                (for [child children]
                  ^{:key (str "child-" (:db/id child))}
-                 [dispatch child]))]
+                 [dispatch db child]))]
              [v-box
               :gap "0px"
               :style {:flex "1 1 0%"}
@@ -167,7 +187,7 @@
                             {})
                    :model     (r/cursor active-tab [:db/id])
                    :tabs      (reaction (sort-by :swig/index @tabs))
-                   :label-fn  tab-label-fn
+                   :label-fn  (partial tab-label-fn db)
                    :id-fn     :db/id
                    :on-change (fn [tab-id]
                                 (re-posh/dispatch [::events/set-active-tab view-id tab-id]))]
@@ -181,7 +201,7 @@
                                {:flex "1 1 0%"}
                                {:visibility "hidden"
                                 :display    "none"})
-                      :child [dispatch tab]]))]]]
+                      :child [dispatch db tab]]))]]]
                [v-box
                 :style (if (or (= (count @tabs) 1)
                                (:swig.tab/fullscreen @active-tab))
@@ -192,14 +212,14 @@
                 (doall
                  (for [child children]
                    ^{:key (str "window-" (:db/id child))}
-                   [dispatch child]))]]])]
+                   [dispatch db child]))]]])]
        (if handler
-         ((get-method dispatch handler) props child)
+         ((get-method dispatch handler) db props child)
          child))))
 
 #?(:cljs
    (defmethod dispatch :swig.type/split
-     [{:keys [:swig.dispatch/handler] :as props}]
+     [db {:keys [:swig.dispatch/handler] :as props}]
      (let [split-id (:db/id props)
            children (sort-by :swig/index
                              @(re-posh/subscribe [::subs/get-children split-id [:swig.type/view
@@ -219,20 +239,20 @@
                                               (.stopPropagation event)
                                               (re-posh/dispatch [::events/join-views split-id]))))}
             :initial-split   (:swig.split/split-percent split)
-            :panel-1         [dispatch (first children)]
-            :panel-2         [dispatch (second children)]]]
+            :panel-1         [dispatch db (first children)]
+            :panel-2         [dispatch db (second children)]]]
       (if handler
         ((get-method dispatch handler) props child)
         child))))
 
 #?(:cljs
-   (defn root-component [view-id]
+   (defn root-component [db view-id]
      (let [elem @(re-posh/subscribe [::subs/get-element view-id])]
        [v-box
         :height "100vh"
         :width "100vw"
         :children
-        [[dispatch elem]]]))
+        [[dispatch db elem]]]))
  :clj
  (defn root-component [view-id]
    (throw (Exception. "Not implemented for clj."))))

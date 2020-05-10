@@ -110,7 +110,6 @@
      [:swig.split/split-percent
       :swig.split/ops
       :swig.split/orientation]))
-
 ;; Cells
 
 #?(:cljs
@@ -127,3 +126,8 @@
       :in $ [?id ...]
       :where
       [?id :swig.operation/name ?name]]))
+
+#?(:cljs
+   (def-pull-sub ::get-operation
+     [:db/id
+      :swig/type]))

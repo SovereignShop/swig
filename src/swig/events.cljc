@@ -7,9 +7,12 @@
 
 (defn find-ancestor [elem type]
   (let [elem-type (:swig/type elem)]
+    (print "elem-type:" elem-type)
     (cond (= elem-type type) elem
           (= elem-type :swig/root) (throw #?(:cljs (js/Error. (str "Type not found: " type))
                                              :clj (Exception. (str "Type not found: " type))))
+          (nil? elem-type) (throw #?(:clj (Exception.  "nil type!")
+                                     :cljs (js/Error. "nil type!")))
           :else (recur (:swig.ref/parent elem) type))))
 
 (defn next-tab-id [tab-id tab-ids]
@@ -24,7 +27,8 @@
         (d/q '[:find  [?tab-id ...]
                :in $ ?view-id
                :where
-               [?tab-id :swig.ref/parent ?view-id]]
+               [?tab-id :swig.ref/parent ?view-id]
+               [?tab-id :swig/type :swig.type/tab]]
              db
              (:db/id view))]
     (if (> (count tab-ids) 1)
@@ -97,24 +101,22 @@
               :swig/index               (:swig/index view)
               :swig/type                :swig.type/split
               :swig.ref/parent          view-parent-id
-              :swig.split/ops           [{:swig/type :swig.type/operation
-                                          :swig.operation/name :operation/re-orient}
-                                         {:swig/type :swig.type/operation
-                                          :swig.operation/name :operation/join}]
+              :swig.split/ops           [{:swig/type :swig.operation/re-orient}
+                                         {:swig/type :swig.operation/join}]
               :swig.split/orientation   orientation
               :swig.split/split-percent 50.1}
              {:db/id                -1
               :swig/index           0
               :swig/type            :swig.type/view
               :swig.ref/parent      -2
-              :swig.view/ops        [{:swig/type :swig.type/operation
-                                      :swig.operation/name :operation/divide-vertical}
-                                     {:swig/type :swig.type/operation
-                                      :swig.operation/name :operation/divide-horizontal}]
+              :swig.view/ops        [{:swig/type :swig.operation/divide-vertical}
+                                     {:swig/type :swig.operation/divide-horizontal}]
               :swig.view/active-tab (next-tab-id tab-id tab-ids)}
              [:db/add view-id :swig.ref/parent -2]
              [:db/add view-id :swig/index 1]]
-)))
+            (for [id    tab-ids
+                  :when (not= id tab-id)]
+              [:db/add id :swig.ref/parent -1]))))
 
 (defn join-views
   "Join the two view children of a split into a single view."
@@ -125,6 +127,7 @@
                :in $ ?split-id
                :where
                [?view-id :swig.ref/parent ?split-id]
+               [?view-id :swig/type :swig.type/view]
                [?split-id :swig/type :swig.type/split]]
              db
              split-id)
@@ -148,6 +151,7 @@
 
 (defn set-split-percent [split-id percent]
   [[:db/add split-id :swig.split/split-percent (+ (float percent) 0.001)]])
+
 
 #?(:cljs
    (re-posh/reg-event-ds
@@ -201,7 +205,7 @@
     ::join-views
     (fn reg-join-views
       [db [_ id]]
-      (let [split (find-ancestor (d/entity db id) :swit.type/split)]
+      (let [split (find-ancestor (d/entity db id) :swig.type/split)]
         (join-views db split)))))
 
 #?(:cljs
@@ -217,3 +221,10 @@
     (fn reg-initialize
       [_ [_ facts]]
       facts)))
+
+#?(:cljs
+   (re-posh/reg-event-ds
+    ::set-active-tab
+    (fn reg-set-active-tab
+      [db [_ view-id tab-id]]
+      [[:db/add view-id :swig.view/active-tab tab-id]])))

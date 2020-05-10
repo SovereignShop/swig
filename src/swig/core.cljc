@@ -32,7 +32,6 @@
    {:db/ident :swig.split/split-percent :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
    {:db/ident :swig.cell/element :db/valueType :db.type/string :db/cardinality :db.cardinality/one}])
 
-
 (defn cell [props]
   [:swig.type/cell props])
 
@@ -53,6 +52,6 @@
      (re-posh/dispatch-sync [::e/initialize (hiccup->facts layout)])))
 
 #?(:cljs
-   (defn render [view-id]
-     (reagent/render [views/root-component view-id]
+   (defn render [db view-id]
+     (reagent/render [views/root-component db view-id]
                      (.getElementById js/document "app"))))
