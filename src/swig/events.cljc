@@ -8,7 +8,8 @@
 (defn find-ancestor [elem type]
   (let [elem-type (:swig/type elem)]
     (cond (= elem-type type) elem
-          (= elem-type :swig/root) (throw (js/Error. (str "Type not found: " type)))
+          (= elem-type :swig/root) (throw #?(:cljs (js/Error. (str "Type not found: " type))
+                                             :clj (Exception. (str "Type not found: " type))))
           :else (recur (:swig.ref/parent elem) type))))
 
 (defn next-tab-id [tab-id tab-ids]
@@ -113,9 +114,7 @@
               :swig.view/active-tab (next-tab-id tab-id tab-ids)}
              [:db/add view-id :swig.ref/parent -2]
              [:db/add view-id :swig/index 1]]
-            (for [id    tab-ids
-                  :when (not= id tab-id)]
-              [:db/add id :swig.ref/parent -1]))))
+)))
 
 (defn join-views
   "Join the two view children of a split into a single view."
@@ -211,3 +210,10 @@
     (fn reg-set-split-percent
       [db [_ split-id split-percent]]
       (set-split-percent split-id split-percent))))
+
+#?(:cljs
+   (re-posh/reg-event-ds
+    ::initialize
+    (fn reg-initialize
+      [_ [_ facts]]
+      facts)))
