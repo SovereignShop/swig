@@ -7,7 +7,7 @@
 
 (defn find-ancestor [elem type]
   (let [elem-type (:swig/type elem)]
-    (cond (= elem-type type) parent
+    (cond (= elem-type type) elem
           (= elem-type :swig/root) (throw (js/Error. (str "Type not found: " type)))
           :else (recur (:swig.ref/parent elem) type))))
 
@@ -27,14 +27,15 @@
              db
              (:db/id view))]
     (if (> (count tab-ids) 1)
-      (let [new-active-tab (next-tab-id (:db/id tab) tab-ids)]
+      (let [new-active-tab (next-tab-id id tab-ids)]
         [[:db/add (:db/id view) :swig.view/active-tab new-active-tab]])
       [])))
 
 (defn enter-fullscreen [db tab]
-  (let [main-view  (d/entity db root-view)
+  (let [tab-id (:db/id tab)
+        main-view  (d/entity db root-view)
         active-tab (:db/id (:swig.view/active-tab main-view))]
-    (into (update-active-tab db (:db/id tab))
+    (into (update-active-tab db tab-id)
           [{:db/id                    tab-id
             :swig.ref/parent          root-view
             :swig.ref/previous-parent (:db/id (:swig.ref/parent tab))
@@ -119,8 +120,7 @@
 (defn join-views
   "Join the two view children of a split into a single view."
   [db split]
-  (let [split
-        view-ids
+  (let [view-ids
         (d/q '[:find [?view-id ...]
                :in $ ?split-id
                :where
