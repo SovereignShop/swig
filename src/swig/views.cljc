@@ -85,6 +85,20 @@
                   (.stopPropagation event)
                   (re-posh/dispatch [::events/join-views id]))]))
 
+#?(:cljs
+   (defmethod dispatch :swig.type/operations
+     [{:keys [:sdb/id] :as operations}]
+     (let [{:keys [:swig.operations/ops]} operations]
+       [h-box
+        :children
+        [[v-box
+          :children
+          (doall
+           (for [op ops]
+             (dispatch op)))]
+         (when (seq ops)
+           ^{:key (str "line-" id)}
+           [line])]])))
 
 #?(:cljs
    (defmethod dispatch :swig.type/tab
@@ -109,14 +123,8 @@
            :md-icon-name "zmdi-close"
            :on-click (fn [event]
                        (re-posh/dispatch [::events/exit-fullscreen id]))]
-          [v-box
-           :children
-           (doall
-            (for [op ops]
-              (dispatch @(re-posh/subscribe [::subs/get-operation (:db/id op)]))))]
-          (when (seq ops)
-            ^{:key (str "line-" id)}
-            [line])
+          (when ops
+            (dispatch ops))
           (if handler-fn
             (if child
               (handler-fn tab child)

@@ -38,48 +38,53 @@
 
 (def internal-keys #{:db/id :swig/index :swig.ref/parent :swig/type})
 
-(defmulti compile-hiccup-impl (fn [parent elem] (:swig/type elem)))
+(defmulti compile-hiccup-impl (fn [elem id-gen parent] (:swig/type elem)))
 
 (defmethod compile-hiccup-impl :default
-  [_ props]
+  [props _ _]
   props)
 
 (defmethod compile-hiccup-impl :swig.type/tab
-  [_ {id :db/id :as props}]
+  [{id :db/id :as props} id-gen _]
   (cond-> props
     (:swig.tab/ops props)
-    (update :swig.tab/ops
-            (fn [ops]
-              (map #(assoc % :swig.ref/parent id) ops)))))
+    (update :swig.tab/ops compile-hiccup-impl id-gen id)))
 
 (defmethod compile-hiccup-impl :swig.type/view
-  [_ {id :db/id :as props}]
+  [{id :db/id :as props} id-gen _]
   (cond-> props
     (:swig.view/ops props)
-    (update :swig.view/ops
-            (fn [ops]
-              (map #(assoc % :swig.ref/parent id) ops)))))
+    (update :swig.view/ops compile-hiccup-impl id-gen id)))
 
 (defmethod compile-hiccup-impl :swig.type/split
-  [_ {id :db/id :as props}]
+  [{id :db/id :as props} id-gen _]
   (cond-> props
     (:swig.split/ops props)
-    (update :swig.split/ops
-            (fn [ops]
-              (map #(assoc % :swig.ref/parent id) ops)))))
+    (update :swig.split/ops compile-hiccup-impl id-gen id)))
+
+(defmethod compile-hiccup-impl :swig.type/operations
+  [props id-gen parent]
+  (let [id (swap! id-gen dec)]
+    (cond-> (assoc props
+                   :swig.ref/parent parent
+                   :db/id id)
+      (:swig.operations/ops props)
+      (update :swig.operations/ops
+              (fn [ops]
+                (map #(assoc % :swig.ref/parent id) ops))))))
 
 (defn hiccup->facts
   ([hiccup]
    (hiccup->facts -100000 hiccup))
   ([parent hiccup]
-   (let [id        (volatile! -1)
+   (let [id-gen        (atom -1)
          conformed (s/conform ::node hiccup)]
      ((fn run [parent idx hiccup]
         (lazy-seq
          (when (seq hiccup)
            (match hiccup
                   [(:or :element :empty-element) props]
-                  (let [id (or (-> props :args :db/id) (vreset! id (dec @id)))
+                  (let [id (or (-> props :args :db/id) (swap! id-gen dec))
                         args (:args props)]
                     (conj (vec (mapcat (partial run id)
                                        (range)
@@ -87,14 +92,15 @@
                                               [:nodes nodes] nodes
                                               [:nodes-list nodes] nodes)))
                           (compile-hiccup-impl
-                           parent
                            (cond-> (assoc args
                                           :swig.ref/parent parent
                                           :db/id id
                                           :swig/index idx
                                           :swig/type (:name props))
                              (not= parent -100000)
-                             (assoc :swig.ref/parent parent)))))
+                             (assoc :swig.ref/parent parent))
+                           id-gen
+                           parent)))
                   :cljs.spec.alpha/invalid
                   (s/explain ::node hiccup)))))
       parent 0 conformed))))

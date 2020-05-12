@@ -101,16 +101,25 @@
               :swig/index               (:swig/index view)
               :swig/type                :swig.type/split
               :swig.ref/parent          view-parent-id
-              :swig.split/ops           [{:swig/type :swig.operation/re-orient}
-                                         {:swig/type :swig.operation/join}]
+              :swig.split/ops           {:swig/type :swig.type/operations
+                                         :swig.ref/parent -2
+                                         :swig.operations/ops
+                                         [{:swig/type :swig.operation/re-orient}
+                                          {:swig/type :swig.operation/join}]}
               :swig.split/orientation   orientation
               :swig.split/split-percent 50.1}
              {:db/id                -1
               :swig/index           0
               :swig/type            :swig.type/view
               :swig.ref/parent      -2
-              :swig.view/ops        [{:swig/type :swig.operation/divide-vertical}
-                                     {:swig/type :swig.operation/divide-horizontal}]
+              :swig.view/ops        {:swig/type :swig.type/operations
+                                     :db/id -3
+                                     :swig.ref/parent -1
+                                     :swig.operations/ops
+                                     [{:swig/type :swig.operation/divide-vertical
+                                       :swig.ref/parent -3}
+                                      {:swig/type :swig.operation/divide-horizontal
+                                       :swig.ref/parent -3}]}
               :swig.view/active-tab (next-tab-id tab-id tab-ids)}
              [:db/add view-id :swig.ref/parent -2]
              [:db/add view-id :swig/index 1]]

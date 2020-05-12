@@ -53,7 +53,10 @@
                            :swig.ref/parent
                            :swig.tab/label
                            :swig.tab/order
-                           :swig.tab/ops
+                           {:swig.tab/ops
+                            [:swig/type
+                             {:swig.operations/ops
+                              [:swig/type]}]}
                            :swig/ident
                            :db/id
                            :swig.dispatch/handler
@@ -131,3 +134,9 @@
    (def-pull-sub ::get-operation
      [:db/id
       :swig/type]))
+
+#?(:cljs
+   (def-pull-sub ::get-operations
+     [:db/id
+      :swig/type
+      :swig.operations/ops]))
