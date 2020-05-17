@@ -93,6 +93,7 @@
                :in $ ?view-id
                :where
                [?tab-id :swig.ref/parent ?view-id]
+               [?tab-id :swig/type :swig.type/tab]
                [?view-id :swig/type :swig.type/view]]
              db
              view-id)
@@ -102,10 +103,13 @@
               :swig/type                :swig.type/split
               :swig.ref/parent          view-parent-id
               :swig.split/ops           {:swig/type :swig.type/operations
+                                         :db/id -4
                                          :swig.ref/parent -2
                                          :swig.operations/ops
-                                         [{:swig/type :swig.operation/re-orient}
-                                          {:swig/type :swig.operation/join}]}
+                                         [{:swig/type :swig.operation/re-orient
+                                           :swig.ref/parent -4}
+                                          {:swig/type :swig.operation/join
+                                           :swig.ref/parent -4}]}
               :swig.split/orientation   orientation
               :swig.split/split-percent 50.1}
              {:db/id                -1
