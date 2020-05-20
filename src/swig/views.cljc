@@ -87,8 +87,8 @@
 
 #?(:cljs
    (defmethod dispatch :swig.type/operations
-     [{:keys [:sdb/id] :as operations}]
-     (let [{:keys [:swig.operations/ops]} operations]
+     [{:keys [:db/id :swig.operations/ops] :as operations}]
+     (let [{:keys [:sw]} operations]
        [h-box
         :children
         [[v-box
@@ -142,8 +142,7 @@
 
 #?(:cljs
    (defn tab-label-fn [tab]
-     (let [{:keys [:db/id]} (:swig.tab/label tab)]
-       (dispatch @(re-posh/subscribe [::subs/get-cell id])))))
+     (dispatch (:swig.tab/label tab))))
 
 #?(:cljs
    (defmethod dispatch :swig.type/view
@@ -173,37 +172,33 @@
               :gap "0px"
               :style {:flex "1 1 0%"}
               :children
-              [[box
-                :size "1"
+              [[v-box
                 :style {:flex "1 1 0%"}
-                :child
-                [v-box
-                 :style {:flex "1 1 0%"}
-                 :children
-                 [^{:key (str "layout-h-tabs-" view-id)}
-                  [(case view-type :bar horizontal-bar-tabs horizontal-tabs)
-                   :style (if (or (= (count @tabs) 1)
-                                  (:swig.tab/fullscreen @active-tab))
-                            {:visibility "hidden"
-                             :display    "none"}
-                            {})
-                   :model     (r/cursor active-tab [:db/id])
-                   :tabs      (reaction (sort-by :swig/index @tabs))
-                   :label-fn  tab-label-fn
-                   :id-fn     :db/id
-                   :on-change (fn [tab-id]
-                                (re-posh/dispatch [::events/set-active-tab view-id tab-id]))]
-                  (doall
-                   (for [tab (sort-by (fnil :swig/index 0) @tabs)
-                         :let  [id (:db/id tab)]]
-                     ^{:key (str "tab-" id)}
-                     [box
-                      :size (if (= id active-tab-id) "none" "0%")
-                      :style (if (= id active-tab-id)
-                               {:flex "1 1 0%"}
-                               {:visibility "hidden"
-                                :display    "none"})
-                      :child [dispatch tab]]))]]]
+                :children
+                [^{:key (str "layout-h-tabs-" view-id)}
+                 [(case view-type :bar horizontal-bar-tabs horizontal-tabs)
+                  :style (if (or (= (count @tabs) 1)
+                                 (:swig.tab/fullscreen @active-tab))
+                           {:visibility "hidden"
+                            :display    "none"}
+                           {})
+                  :model     (r/cursor active-tab [:db/id])
+                  :tabs      (reaction (sort-by :swig/index @tabs))
+                  :label-fn  tab-label-fn
+                  :id-fn     :db/id
+                  :on-change (fn [tab-id]
+                               (re-posh/dispatch [::events/set-active-tab view-id tab-id]))]
+                 (doall
+                  (for [tab (sort-by (fnil :swig/index 0) @tabs)
+                        :let  [id (:db/id tab)]]
+                    ^{:key (str "tab-" id)}
+                    [box
+                     :size (if (= id active-tab-id) "none" "0%")
+                     :style (if (= id active-tab-id)
+                              {:flex "1 1 0%"}
+                              {:visibility "hidden"
+                               :display    "none"})
+                     :child [dispatch tab]]))]]
                [v-box
                 :style (if (or (= (count @tabs) 1)
                                (:swig.tab/fullscreen @active-tab))

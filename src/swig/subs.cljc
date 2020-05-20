@@ -51,7 +51,9 @@
      [:find (pull ?tab-id [:swig.tab/fullscreen
                            :swig.tab/handler
                            :swig.ref/parent
-                           :swig.tab/label
+                           {:swig.tab/label
+                            [:swig/type
+                             :swig.cell/element]}
                            :swig.tab/order
                            {:swig.tab/ops
                             [:swig/type
