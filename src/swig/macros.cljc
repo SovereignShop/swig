@@ -14,7 +14,7 @@
 
 (defmacro def-event-ds
   [k args & body]
-  (let [sym (symbol (namespace k) (name k))]
+  (let [sym (symbol (name k))]
     `(do (defn ~sym ~args ~@body)
          (re-posh.core/reg-event-ds ~k ~sym))))
 
@@ -31,23 +31,22 @@
 
          :else [:none nil query]))
 
-
 (defmacro def-sub
   ^{:style/indent [:defn]}
   ([query-name query]
    (let [parsed-query    (compile-query query)
-         query-name-sym  (symbol (namespace query-name) (name query-name))
-         signal-fn-name  (symbol (namespace query-name) (str (name query-name) "-signal"))
-         handler-fn-name (symbol (namespace query-name) (str (name query-name) "-handler"))
+         query-name-sym  (symbol (name query-name))
+         signal-fn-name  (symbol (str (name query-name) "-signal"))
+         handler-fn-name (symbol (str (name query-name) "-handler"))
          find-ids-query  (keyword (namespace query-name)
                                   (str (gensym (name query-name))))]
      (match parsed-query
             [:none nil find-expr]
             `(do (def ~query-name-sym (quote ~query))
-                 (defn ~handler-fn-name [_# [_ & variables#]]
+                 (defn ~handler-fn-name [_# variables#]
                    {:type      :query
                     :query     (quote ~query)
-                    :variables variables#})
+                    :variables (next variables#)})
                  (re-posh.core/reg-sub ~query-name ~handler-fn-name))
             [:pull-many pull-pattern find-expr]
             `(do (def ~query-name-sym (quote ~query))

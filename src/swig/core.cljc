@@ -5,7 +5,8 @@
    [swig.events :as e]
    #?@(:cljs [[swig.parser :refer [hiccup->facts]]
               [re-posh.core :as re-posh]
-              [reagent.core :as reagent]])))
+              [reagent.dom :as reagent]])))
+
 
 (def full-schema
   [{:db/ident :swig.dispatch/handler :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one}
