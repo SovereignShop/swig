@@ -1,20 +1,56 @@
-#?(:cljs
-   (ns swig.views
+(ns swig.views
+  #?(:cljs
      (:require [clojure.string :as str]
                [re-com.core :refer [box v-box horizontal-tabs h-split v-split scroller
                                     h-box md-icon-button line gap horizontal-bar-tabs]]
                [re-posh.core :as re-posh]
                [reagent.core :as r]
+               [reagent.dom :as rdom]
                [reagent.ratom :refer [reaction]]
                [swig.events :as events]
-               [swig.subs :as subs]))
-   :clj
-   (ns swig.views
+               [swig.subs :as subs])
+     :clj
      (:require
       [swig.events :as events]
       [swig.subs :as subs])))
 
 (def root-view [:swig/ident :swig/root-view])
+
+#?(:cljs
+   (defn mount [popup-window popup-document]
+     ;; When programming here, we need to be careful about which document and window
+     ;; we are operating on, and keep in mind that the window can close without going
+     ;; through standard react lifecycle, so we hook the beforeunload event.
+     (let [app                      (.getElementById popup-document "--re-frame-10x--")]
+       (rdom/render
+        [(r/create-class
+          {:display-name           "devtools outer external"
+           ;; :component-will-unmount unmount
+           :reagent-render         (fn []
+                                     component)})]
+        app))))
+
+#?(:cljs
+   (defn open-debugger-window
+     "Originally copied from re-frisk.devtool/open-debugger-window"
+     [{:keys [width height top left]} component]
+     (let [doc-title        js/document.title
+           new-window-title (goog.string/escapeString (str "Popout | " doc-title))
+           new-window-html  (str "<head><title>"
+                                 new-window-title
+                                 "</title></head><body style=\"margin: 0px;\"><div id=\"--re-frame-10x--\" class=\"external-window\"></div></body>")]
+       (if-let [w (js/window.open "about:blank" "re-frame-10x-popout"
+                                  (str "width=" width ",height=" height ",left=" left ",top=" top
+                                       ",resizable=yes,scrollbars=yes,status=no,directories=no,toolbar=no,menubar=no"))]
+         (let [d (.-document w)]
+           (.open d)
+           (.write d new-window-html)
+           (goog.object/set w "onload" #(mount w component))
+           (.close d)
+           true)
+         false))))
+
+#_(open-debugger-window {:width 500 :height 500 :top 100 :left 100})
 
 (defn swig-dispatch-fn
   ([props]
@@ -29,6 +65,12 @@
    [:div (str "No method found for props:" props)])
   ([props child]
    [:div (str "No method found for props:" props)]))
+
+#?(:cljs
+   (defmethod dispatch :swig.type/popout
+     [{:keys [:db/id]}]
+     (let [dimentions (re-posh/subscribe [::subs/popout-dimensions id])])
+     ))
 
 #?(:cljs
    (defmethod dispatch :swig.operation/divide-horizontal [{:keys [:db/id]}]

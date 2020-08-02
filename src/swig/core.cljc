@@ -7,7 +7,6 @@
               [re-posh.core :as re-posh]
               [reagent.dom :as reagent]])))
 
-
 (def full-schema
   [{:db/ident :swig.dispatch/handler :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one}
    {:db/ident :swig.ref/previous-parent :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
