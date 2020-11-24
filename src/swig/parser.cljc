@@ -2,6 +2,8 @@
   (:require
    #?(:cljs [cljs.spec.alpha :as s]
       :clj [clojure.spec.alpha :as s])
+   [malli.core :as m]
+   [swig.spec :as spec]
    [datascript.core :as d]
    #?(:clj [clojure.core.match :refer [match]]
       :cljs [cljs.core.match :refer-macros [match]])))
@@ -38,7 +40,7 @@
 
 (def internal-keys #{:db/id :swig/index :swig.ref/parent :swig/type})
 
-(defmulti compile-hiccup-impl (fn [elem id-gen parent] (:swig/type elem)))
+(defmulti compile-hiccup-impl (fn [elem _ _] (:swig/type elem)))
 
 (defmethod compile-hiccup-impl :default
   [props _ _]
@@ -77,33 +79,26 @@
   ([hiccup]
    (hiccup->facts -100000 hiccup))
   ([parent hiccup]
-   (let [id-gen        (atom -1)
-         conformed (s/conform ::node hiccup)]
-     ((fn run [parent idx hiccup]
-        (lazy-seq
-         (when (seq hiccup)
-           (match hiccup
-                  [(:or :element :empty-element) props]
-                  (let [id (or (-> props :args :db/id) (swap! id-gen dec))
-                        args (:args props)]
-                    (conj (vec (mapcat (partial run id)
-                                       (range)
-                                       (match (:body props)
-                                              [:nodes nodes] nodes
-                                              [:nodes-list nodes] nodes)))
-                          (compile-hiccup-impl
-                           (cond-> (assoc args
-                                          :swig.ref/parent parent
-                                          :db/id id
-                                          :swig/index idx
-                                          :swig/type (:name props))
-                             (not= parent -100000)
-                             (assoc :swig.ref/parent parent))
-                           id-gen
-                           parent)))
-                  :cljs.spec.alpha/invalid
-                  (s/explain ::node hiccup)))))
-      parent 0 conformed))))
+   (let [id-gen (atom -1)
+         valid? (m/validate :swig.spec/view hiccup {:registry spec/registry})]
+     (if (not valid?)
+       (throw (ex-info "Schema Validation Failed"
+                       (m/explain :swig.spec/view hiccup {:registry spec/registry})))
+       ((fn run [parent idx [swig-type props children]]
+          (lazy-seq
+           (let [id (or (:db/id props) (swap! id-gen dec))]
+             (conj (vec (mapcat (partial run id)(range) children))
+                   (compile-hiccup-impl
+                    (cond-> (assoc props
+                                   :swig.ref/parent parent
+                                   :db/id id
+                                   :swig/index idx
+                                   :swig/type swig-type)
+                      (not= parent -100000)
+                      (assoc :swig.ref/parent parent))
+                    id-gen
+                    parent)))))
+        parent 0 hiccup)))))
 
 (defn facts->hiccup
   ([facts]

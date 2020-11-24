@@ -1,21 +1,73 @@
 (ns swig.spec
-  (:require [clojure.spec.alpha :as s]))
+  (:require
+   [malli.core :as m]))
 
-(s/def :swig.view/ops keyword?)
-(s/def :swig.tab/ops keyword?)
-(s/def :swig.tab/fullscreen boolean?)
-(s/def :swig.ref/parent int?)
+(def swig-registry
+  {::label
+   [:map
+    [:swig/type {:optional false} [:= :swig.type/cell]]
+    [:swig.cell/element {:optional false} string?]]
 
-(s/def :swig.type/view
-  (s/keys :req [:swig.view/active-tab
-                :swig.view/ops]))
+   ::ident
+   [:or pos-int? [:tuple keyword? keyword?]]
 
-(s/def :swig.type/tab
-  (s/keys :req [:swig.tab/fullscreen
-                :swig.tab/ops
-                :swig.tab/label]))
+   ::operation
+   [:map
+    [:swig.operation/name {:optional false} keyword?]]
 
-(s/def :swig.type/split
-  (s/keys :req [:swig.split/ops
-                :swig.split/orientation
-                :swig.split/split-percent]))
+   ::frame
+   [:tuple
+    [:= :swig.type/frame]
+    [:map
+     [:swig.frame/width {:optional false} :double]
+     [:swig.frame/height {:optional false} :double]
+     [:swig.frame/left {:optional false} :double]
+     [:swig.frame/top {:optional false} :double]]
+    [:vector [:or [:ref ::view] [:ref ::tab] [:ref ::split]]]]
+
+   ::tab
+   [:tuple
+    [:= :swig.type/tab]
+    [:map
+     [:swig.tab/fullscreen {:optional true} :boolean]
+     [:swig.tab/ops {:optional true} [:vector ::operation]]]
+    [:vector [:or [:ref ::frame] [:ref ::view] [:ref ::split]]]]
+
+   ::view-ops
+   [:vector [:map]]
+
+   ::view
+   [:tuple
+    [:= :swig.type/view]
+    [:map
+     [:swig.view/active-tab {:optional true} ::ident]
+     [:swig.view/previous-active-tab {:optional true} ::ident]
+     [:swig.view/ops {:optional true} ::view-ops]]
+    [:vector [:or [:ref ::window] [:ref ::tab] [:ref ::view] [:ref ::split]]]]
+
+   ::split-ops
+   [:vector [:map]]
+
+   ::split
+   [:tuple
+    [:= :swig.type/split]
+    [:map
+     [:swig.split/ops {:optional true} [:ref ::split-ops]]
+     [:swig.split/orientation {:optional false} [:or [:= :horizontal] [:= :vertical]]]
+     [:swig.split/split-percent {:optional false} :int]]
+    [:vector [:or [:ref ::view] [:ref ::tab] [:ref ::split]]]]
+
+   ::window
+   [:tuple
+    [:= :swig.type/window]
+    [:map
+     [:swig.window/child {:optional true} any?]]
+    [:vector any?]]})
+
+(def registry
+  (merge (m/class-schemas)
+         (m/comparator-schemas)
+         (m/base-schemas)
+         (m/predicate-schemas)
+         (m/type-schemas)
+         swig-registry))

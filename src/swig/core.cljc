@@ -30,22 +30,29 @@
    {:db/ident :swig.split/orientation :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one}
    {:db/ident :swig.split/split-percent :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
    {:db/ident :swig.cell/element :db/valueType :db.type/string :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.operations/ops :db/valueType :db.type/ref :db/cardinality :db.cardinality/many}])
+   {:db/ident :swig.operations/ops :db/valueType :db.type/ref :db/cardinality :db.cardinality/many}
+   {:db/ident :swig.frame/height :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
+   {:db/ident :swig.frame/width :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
+   {:db/ident :swig.frame/top :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
+   {:db/ident :swig.frame/left :db/valueType :db.type/number :db/cardinality :db.cardinality/one}])
 
 (defn cell [props]
-  [:swig.type/cell props])
+  [:swig.type/cell props []])
 
 (defn tab [props & children]
-  [:swig.type/tab props children])
+  [:swig.type/tab props (vec children)])
 
 (defn view [props & children]
-  [:swig.type/view props children])
+  [:swig.type/view props (vec children)])
 
 (defn split [props & children]
-  [:swig.type/split props children])
+  [:swig.type/split props (vec children)])
 
 (defn window [props]
-  [:swig.type/window props nil])
+  [:swig.type/window props []])
+
+(defn frame [props & children]
+  [:swig.type/frame props (vec children)])
 
 #?(:cljs
    (defn init [layout]

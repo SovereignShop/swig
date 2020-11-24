@@ -8,6 +8,7 @@
         datamaps               {:mvn/version "0.1.3-SNAPSHOT"}
         re-frame               {:mvn/version "0.10.6"}
         re-com                 {:mvn/version "2.5.0"}
+        metosin/malli          {:mvn/version "0.2.1"}
         datascript             {:mvn/version "0.18.4"
                                 :exclusions  [org.clojure/clojurescript]}}
  :aliases

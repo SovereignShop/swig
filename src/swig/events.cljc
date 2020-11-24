@@ -5,6 +5,9 @@
 
 (def root-view [:swig/ident :swig/root-view])
 
+(defn set-active-tab [db view-id tab-id]
+  [[:db/add view-id :swig.view/active-tab tab-id]])
+
 (defn find-ancestor [elem type]
   (let [elem-type (:swig/type elem)]
     (print "elem-type:" elem-type)
@@ -50,12 +53,19 @@
             :swig.view/previous-active-tab active-tab}])))
 
 (defn exit-fullscreen [db tab]
-  (let [main-view (d/entity db root-view)]
-    [{:db/id (:db/id tab)
-      :swig.tab/fullscreen false
-      :swig.ref/parent (:db/id (:swig.ref/previous-parent tab))}
-     {:db/id root-view
-      :swig.view/active-tab (:db/id (:swig.view/previous-active-tab main-view))}]))
+  (let [tab-id              (:db/id tab)
+        previous-parent-id  (:db/id (:swig.ref/previous-parent tab))
+        main-view           (d/entity db root-view)
+        previous-active-tab (:db/id (:swig.view/previous-active-tab main-view))]
+    [[:db.fn/retractAttribute tab-id    :swig.tab/fullscreen]
+     [:db.fn/retractAttribute tab-id    :swig.ref/previous-parent]
+     [:db.fn/retractAttribute root-view :swig.view/previous-active-tab]
+     {:db/id           tab-id
+      :swig.ref/parent previous-parent-id}
+     {:db/id                previous-parent-id
+      :swig.view/active-tab tab-id}
+     {:db/id                root-view
+      :swig.view/active-tab previous-active-tab}]))
 
 (defn move-tab [tab-id view-id]
   [[:db/add tab-id :swig.ref/parent view-id]])
@@ -153,7 +163,7 @@
              db
              view-ids)
         parent  (:swig.ref/parent (d/entity db split-id))
-        view-id (first view-ids)]
+        view-id (second view-ids)]
     (concat [[:db/add view-id :swig.ref/parent (:db/id parent)]
              [:db/retractEntity split-id]]
             (for [id    view-ids
@@ -240,4 +250,4 @@
     ::set-active-tab
     (fn reg-set-active-tab
       [db [_ view-id tab-id]]
-      [[:db/add view-id :swig.view/active-tab tab-id]])))
+      (set-active-tab db view-id tab-id))))
