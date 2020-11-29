@@ -22,6 +22,7 @@
    (def-sub ::get-children
      [:find (pull ?child-id [:db/id
                              :swig.tab/ops
+                             :swig.container/capabilities
                              :swig/ident
                              :swig/index
                              :swig.dispatch/handler
@@ -30,12 +31,14 @@
       :where
       [?child-id :swig.ref/parent ?id]
       [?child-id :swig/type ?type]]))
+
 #?(:cljs
    (def-pull-sub ::get-element
      [:db/id
       :swig/ident
       :swig/index
       :swig.dispatch/handler
+      :swig.container/capabilities
       :swig/type]))
 
 #?(:cljs
@@ -59,6 +62,7 @@
                             [:swig/type
                              {:swig.operations/ops
                               [:swig/type]}]}
+                           {:swig.container/capabilities []}
                            :swig/ident
                            :db/id
                            :swig.dispatch/handler
@@ -67,6 +71,13 @@
       :where
       [?tab-id :swig.ref/parent ?view-id]
       [?tab-id :swig/type :swig.type/tab]]))
+
+#?(:cljs
+   (def-pull-sub ::get-frame
+     [:swig.frame/left
+      :swig.frame/top
+      :swig.frame/width
+      :swig.frame/height]))
 
 #?(:cljs
    (def-pull-sub ::get-tab
@@ -110,6 +121,7 @@
       [?view-id :swig.ref/parent ?split-id]]))
 
 ;; Split subs
+
 #?(:cljs
    (def-pull-sub ::get-split
      [:swig.split/split-percent
@@ -125,6 +137,7 @@
       :db/id]))
 
 ;; Operations
+
 #?(:cljs
    (def-sub ::get-op-names
      [:find [?name ...]
@@ -142,3 +155,30 @@
      [:db/id
       :swig/type
       :swig.operations/ops]))
+
+
+;; Drag subs
+
+#?(:cljs
+   (def-sub ::drag-frame-id
+     [:find ?id .
+      :in $ ?container-id
+      :where
+      [?container-id :swig.capability.drag/frame-id ?id]]))
+
+#?(:cljs
+   (def-sub ::get-drag-frame
+     [:find ?frame-id .
+      :in $ ?view-id
+      :where
+      [?view-id :swig.ref/parent ?frame-id]
+      [?frame-id :swig.ref/parent ?frame-parent-id]
+      [?frame-parent-id :swig.container/capabilities :swig.capability/drag]]))
+
+#?(:cljs
+   (def-sub ::drag-offsets
+     [:find [?left ?top]
+      :in $ ?frame-id
+      :where
+      [?frame-id :swig.frame/offset-left ?left]
+      [?frame-id :swig.frame/offset-top ?top]]))

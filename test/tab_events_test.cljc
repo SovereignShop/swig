@@ -90,7 +90,7 @@
             {:keys [db-before db-after]}
             (d/with db (set-active-tab db parent-id tab-id))]
         (is (= (query-active-tab db-after parent-id) tab-id))
-        (is (= (query-active-tab db-before parent-id) active-tab))))))
+        (is (= (query-active-tab db-before parent-id) (:db/id active-tab)))))))
 
 (deftest test-tabs-enter-exit-fullscreen
   (let [db (d/db-with

@@ -1,8 +1,10 @@
 #?(:cljs
    (ns swig.views
      (:require [clojure.string :as str]
-               [re-com.core :refer [box v-box horizontal-tabs h-split v-split scroller
-                                    h-box md-icon-button line gap horizontal-bar-tabs]]
+               [swig.components.containers :refer [capability-container]]
+               [swig.components.tabs :refer [horizontal-tabs horizontal-bar-tabs]]
+               [re-com.core :refer [box v-box h-split v-split scroller
+                                    h-box md-icon-button line]]
                [re-posh.core :as re-posh]
                [reagent.core :as r]
                [reagent.ratom :refer [reaction]]
@@ -29,6 +31,31 @@
    [:div (str "No method found for props:" props)])
   ([props child]
    [:div (str "No method found for props:" props)]))
+
+#?(:cljs
+   (defmethod dispatch :swig.type/frame
+     ([props]
+      (dispatch props nil))
+     ([{:keys [:db/id]} child]
+      (let [{:keys [:swig.frame/height
+                    :swig.frame/width
+                    :swig.frame/left
+                    :swig.frame/top]
+             :as props} @(re-posh/subscribe [::subs/get-frame id])
+            children
+            @(re-posh/subscribe [::subs/get-children id [:swig.type/window
+                                                         :swig.type/view
+                                                         :swig.type/split]])]
+        [v-box
+         :style {:position :absolute
+                 :border-style "solid"
+                 :flex "1 1 0%"
+                 :box-shadow "5px 5px"
+                 :width width
+                 :height height
+                 :top top
+                 :left left}
+         :children (mapv dispatch children)]))))
 
 #?(:cljs
    (defmethod dispatch :swig.operation/divide-horizontal [{:keys [:db/id]}]
@@ -102,36 +129,42 @@
 
 #?(:cljs
    (defmethod dispatch :swig.type/tab
-     ([{:keys [:db/id :swig/ident :swig.dispatch/handler] :as tab}]
-      (let [child      (first @(re-posh/subscribe
-                                [::subs/get-children id [:swig.type/split
-                                                         :swig.type/view]]))
-            fns        (methods dispatch)
-            handler-fn (get fns handler (get fns ident))
-            ops        (:swig.tab/ops tab)]
-        [h-box
-         :style {:flex "1 1 0%"}
-         :children
-        
-         [^{:key (str "exit-fullscreen-" id)}
-          [md-icon-button
-           :style (if (:swig.tab/fullscreen tab)
-                    {}
-                    {:visibility "hidden"
-                     :display    "none"})
-           :size :smaller
-           :md-icon-name "zmdi-close"
-           :on-click (fn [event]
-                       (re-posh/dispatch [::events/exit-fullscreen id]))]
-          (when ops
-            (dispatch ops))
-          (if handler-fn
-            (if child
-              (handler-fn tab child)
-              (handler-fn tab))
-            (if child
-              (dispatch child)
-              [:div "No handler or child found for tab:" tab]))]]))))
+     ([{:keys [:db/id
+               :swig/ident
+               :swig.dispatch/handler
+               :swig.container/capabilities] :as tab}]
+      (capability-container
+       tab
+       (let [child      (first @(re-posh/subscribe
+                                 [::subs/get-children id [:swig.type/split
+                                                          :swig.type/frame
+                                                          :swig.type/view]]))
+             fns        (methods dispatch)
+             handler-fn (get fns handler (get fns ident))
+             ops        (:swig.tab/ops tab)
+             container-id (str "tab-" id)]
+         [h-box
+          :attr {:id container-id}
+          :style {:flex "1 1 0%"}
+          :children
+          [^{:key (str "exit-fullscreen-" id)}
+           [md-icon-button
+            :style (if (:swig.tab/fullscreen tab)
+                     {}
+                     {:visibility "hidden"
+                      :display    "none"})
+            :size :smaller
+            :md-icon-name "zmdi-close"
+            :on-click (fn [event]
+                        (re-posh/dispatch [::events/exit-fullscreen id]))]
+           (when ops
+             (dispatch ops))
+           (when handler-fn
+             (if child
+               (handler-fn tab child)
+               (handler-fn tab)))
+           (when child
+             (dispatch child))]])))))
 
 #?(:cljs
    (defmethod dispatch :swig.type/window
@@ -152,6 +185,7 @@
            @(re-posh/subscribe [::subs/get-view-ops view-id])
            children      @(re-posh/subscribe [::subs/get-children view-id [:swig.type/window
                                                                            :swig.type/view
+                                                                           :swig.type/frame
                                                                            :swig.type/split]])
            tabs          (re-posh/subscribe [::subs/get-tabs view-id])
            tabs-count    (count @tabs)
@@ -186,6 +220,7 @@
                   :tabs      (reaction (sort-by :swig/index @tabs))
                   :label-fn  tab-label-fn
                   :id-fn     :db/id
+                  :view-id view-id
                   :on-change (fn [tab-id]
                                (re-posh/dispatch [::events/set-active-tab view-id tab-id]))]
                  (doall
@@ -210,9 +245,11 @@
                  (for [child children]
                    ^{:key (str "window-" (:db/id child))}
                    [dispatch child]))]]])]
-       (if handler
-         ((get-method dispatch handler) props child)
-         child))))
+       (capability-container
+        props
+        (if handler
+          ((get-method dispatch handler) props child)
+          child)))))
 
 #?(:cljs
    (defmethod dispatch :swig.type/split

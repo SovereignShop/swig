@@ -43,7 +43,7 @@
      [:swig.view/active-tab {:optional true} ::ident]
      [:swig.view/previous-active-tab {:optional true} ::ident]
      [:swig.view/ops {:optional true} ::view-ops]]
-    [:vector [:or [:ref ::window] [:ref ::tab] [:ref ::view] [:ref ::split]]]]
+    [:vector [:or [:ref ::window] [:ref ::frame] [:ref ::tab] [:ref ::view] [:ref ::split]]]]
 
    ::split-ops
    [:vector [:map]]

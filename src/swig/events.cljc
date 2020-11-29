@@ -10,13 +10,15 @@
 
 (defn find-ancestor [elem type]
   (let [elem-type (:swig/type elem)]
-    (print "elem-type:" elem-type)
     (cond (= elem-type type) elem
           (= elem-type :swig/root) (throw #?(:cljs (js/Error. (str "Type not found: " type))
                                              :clj (Exception. (str "Type not found: " type))))
           (nil? elem-type) (throw #?(:clj (Exception.  "nil type!")
                                      :cljs (js/Error. "nil type!")))
           :else (recur (:swig.ref/parent elem) type))))
+
+(defn ancestor-seq [elem]
+  (next (iterate :swig.ref/parent elem)))
 
 (defn next-tab-id [tab-id tab-ids]
   (assert (> (count tab-ids) 1))
@@ -176,6 +178,29 @@
   [[:db/add split-id :swig.split/split-percent (+ (float percent) 0.001)]])
 
 
+(defn drag-start [db frame-id left top]
+  (when-let [drag-container (first (filter (comp :swig.capability/drag
+                                                 set
+                                                 :swig.container/capabilities)
+                                           (ancestor-seq (d/entity db frame-id))))]
+    [{:db/id (:db/id drag-container)
+      :swig.capability.drag/frame-id frame-id}
+     {:db/id frame-id
+      :swig.frame/offset-left left
+      :swig.frame/offset-top top}]))
+
+(defn drag-stop [db frame-id]
+  (when-let [drag-container (first (filter (comp :swig.capability/drag
+                                                 set
+                                                 :swig.container/capabilities)
+                                           (ancestor-seq (d/entity db frame-id))))]
+    [[:db.fn/retractAttribute (:db/id drag-container) :swig.capability.drag/frame-id]]))
+
+(defn drag-frame [db frame-id left top]
+  [{:db/id frame-id
+    :swig.frame/left left
+    :swig.frame/top top}])
+
 #?(:cljs
    (re-posh/reg-event-ds
     ::enter-fullscreen
@@ -251,3 +276,24 @@
     (fn reg-set-active-tab
       [db [_ view-id tab-id]]
       (set-active-tab db view-id tab-id))))
+
+#?(:cljs
+   (re-posh/reg-event-ds
+    ::drag-start
+    (fn reg-drag-start
+      [db [_ frame-id left top]]
+      (drag-start db frame-id left top))))
+
+#?(:cljs
+   (re-posh/reg-event-ds
+    ::drag-stop
+    (fn reg-drag-start
+      [db [_ frame-id]]
+      (drag-stop db frame-id))))
+
+#?(:cljs
+   (re-posh/reg-event-ds
+    ::drag-frame
+    (fn reg-drag-frame
+      [db [_ frame-id left top]]
+      (drag-frame db frame-id left top))))

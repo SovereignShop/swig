@@ -1,12 +1,11 @@
 (ns swig.core
-  (:require
-   [datascript.core :as d]
-   [swig.views :as views]
-   [swig.events :as e]
-   #?@(:cljs [[swig.parser :refer [hiccup->facts]]
-              [re-posh.core :as re-posh]
-              [reagent.dom :as reagent]])))
-
+  #?(:cljs
+     (:require
+      [swig.views :as views]
+      [swig.events :as e]
+      [swig.parser :refer [hiccup->facts]]
+      [re-posh.core :as re-posh]
+      [reagent.dom :as reagent])))
 
 (def full-schema
   [{:db/ident :swig.dispatch/handler :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one}
@@ -34,7 +33,9 @@
    {:db/ident :swig.frame/height :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
    {:db/ident :swig.frame/width :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
    {:db/ident :swig.frame/top :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.frame/left :db/valueType :db.type/number :db/cardinality :db.cardinality/one}])
+   {:db/ident :swig.frame/left :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
+   {:db/ident :swig.container/capabilities :db/valueType :db.type/keyword :db/cardinality :db.cardinality/many}
+   {:db/ident :swig.capability.drag/frame-id :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}])
 
 (defn cell [props]
   [:swig.type/cell props []])
