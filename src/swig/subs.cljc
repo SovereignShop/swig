@@ -213,9 +213,8 @@
       [?container-id :swig.capability.resize/frame-id ?id]]))
 
 #?(:cljs
-   (def-sub ::resize-start-pose
-     [:find [?left ?top]
-      :in $ ?frame-id
-      :where
-      [?frame-id :swig.capability.resize/start-left ?left]
-      [?frame-id :swig.capability.resize/start-top ?top]]))
+   (def-pull-sub ::resize-start-pose
+     [:swig.capability.resize/start-left
+      :swig.capability.resize/start-top
+      :swig.frame/left
+      :swig.frame/top]))

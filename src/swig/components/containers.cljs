@@ -24,8 +24,9 @@
        (throw (js/Error. "No parent"))
        (if (= (.-id rect) container-id)
          (let [r (.getBoundingClientRect rect)]
-           [(* (- (.-clientX e) (.-left r)) (/ 1 scale))
-            (* (- (.-clientY e) (.-top r)) (/ 1 scale))])
+           (do (println "MOUSE:" (.-clientX e) (.-left r))
+               [(* (- (.-clientX e) (.-left r)) (/ 1 scale))
+                (* (- (.-clientY e) (.-top r)) (/ 1 scale))]))
          (recur (.-parentElement rect)))))))
 
 (defn selection [active? start end style]
@@ -82,7 +83,11 @@
   [child _ {:keys [db/id]}]
   (let [container-id             (str "select-" id)
         frame-id                 @(re-posh/subscribe [::subs/resize-frame-id id])
-        [offset-left offset-top] @(re-posh/subscribe [::subs/resize-start-pose frame-id])]
+        {:keys [swig.capability.resize/start-left
+                swig.capability.resize/start-top
+                swig.frame/left
+                swig.frame/top]}
+        @(re-posh/subscribe [::subs/resize-start-pose frame-id])]
     [box
      :style {:flex "1 1 0%"}
      :attr  {:id container-id
@@ -101,22 +106,22 @@
 
              :on-mouse-move
              (fn [e]
-               (when (and frame-id offset-left offset-top)
+               (when (and frame-id start-left start-top)
                  (.preventDefault e)
-                 (let [[left top] (mouse-xy e 1.0 container-id)]
+                 (let [[mouse-left mouse-top] (mouse-xy e 1.0 container-id)]
                    (re-posh/dispatch [::events/resize-frame frame-id
-                                      (+ left 0)
-                                      (+ top 0)]))
+                                      (+ (- mouse-left left) start-left)
+                                      (+ (- mouse-top top) start-top)]))
                  e))
 
              :on-mouse-up
              (fn [e]
                (.preventDefault e)
                (when frame-id
-                 (let [[left top] (mouse-xy e 1.0 container-id)]
+                 (let [[mouse-left mouse-top] (mouse-xy e 1.0 container-id)]
                    (re-posh/dispatch [::events/resize-frame frame-id
-                                      (+ left 0)
-                                      (+ top 0)])
+                                      (+ (- mouse-left left) start-left)
+                                      (+ (- mouse-top top) start-top)])
                    (re-posh/dispatch [::events/resize-stop frame-id])))
                e)}
      :child child]))

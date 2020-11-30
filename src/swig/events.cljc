@@ -206,11 +206,12 @@
                                                    set
                                                    :swig.container/capabilities)
                                              (ancestor-seq (d/entity db frame-id))))]
-    [{:db/id (:db/id resize-container)
-      :swig.capability.resize/frame-id frame-id}
-     {:db/id frame-id
-      :swig.capability.resize/start-left left
-      :swig.capability.resize/start-top top}]))
+    (let [frame (d/entity db frame-id)]
+      [{:db/id                           (:db/id resize-container)
+        :swig.capability.resize/frame-id frame-id}
+       {:db/id                             frame-id
+        :swig.capability.resize/start-left (- (:swig.frame/width frame) left)
+        :swig.capability.resize/start-top  (- (:swig.frame/height frame) top)}])))
 
 (defn resize-frame [db frame-id left top]
   [{:db/id frame-id
