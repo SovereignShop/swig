@@ -153,16 +153,16 @@
                :swig/ident
                :swig.dispatch/handler
                :swig.container/capabilities] :as tab}]
-      (capability-container
-       tab
-       (let [child      (first @(re-posh/subscribe
-                                 [::subs/get-children id [:swig.type/split
-                                                          :swig.type/frame
-                                                          :swig.type/view]]))
-             fns        (methods dispatch)
-             handler-fn (get fns handler (get fns ident))
-             ops        (:swig.tab/ops tab)
-             container-id (str "tab-" id)]
+      (let [child      (first @(re-posh/subscribe
+                                [::subs/get-children id [:swig.type/split
+                                                         :swig.type/frame
+                                                         :swig.type/view]]))
+            fns        (methods dispatch)
+            handler-fn (get fns handler (get fns ident))
+            ops        (:swig.tab/ops tab)
+            container-id (str "tab-" id)]
+        (capability-container
+         tab
          [h-box
           :attr {:id (str "swig-" container-id)}
           :style {:flex "1 1 0%"}

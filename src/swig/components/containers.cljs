@@ -142,5 +142,4 @@
 
 (defn capability-container
   [{:keys [:swig.container/capabilities :db/id] :as props} child]
-  (println "CAPABILITIES: " capabilities)
   (reduce #(capability-handler %1 %2 props) child capabilities))
