@@ -1,8 +1,24 @@
 (ns swig.subs
   (:require
+   [datascript.core :as d]
    [swig.macros :refer-macros [def-sub def-pull-sub]]))
 
 ;; Generic ops
+
+#?(:cljs
+   (def-sub ::op-get-frame
+     [:find ?frame-id .
+      :in $ ?op-id
+      :where
+      [?op-id :swig.ref/parent ?ops-id]
+      [?frame-id :swig.frame/ops ?ops-id]]))
+
+#?(:cljs
+   (def-sub ::get-parent
+     [:find ?parent-id .
+      :in $ ?id
+      :where
+      [?id :swig.ref/parent ?parent-id]]))
 
 #?(:cljs
    (def-sub ::get-handler
@@ -77,7 +93,11 @@
      [:swig.frame/left
       :swig.frame/top
       :swig.frame/width
-      :swig.frame/height]))
+      :swig.frame/height
+      {:swig.frame/ops
+       [:swig/type
+        {:swig.operations/ops
+         [:swig/type]}]}]))
 
 #?(:cljs
    (def-pull-sub ::get-tab
@@ -182,3 +202,20 @@
       :where
       [?frame-id :swig.frame/offset-left ?left]
       [?frame-id :swig.frame/offset-top ?top]]))
+
+;; Resize subs
+
+#?(:cljs
+   (def-sub ::resize-frame-id
+     [:find ?id .
+      :in $ ?container-id
+      :where
+      [?container-id :swig.capability.resize/frame-id ?id]]))
+
+#?(:cljs
+   (def-sub ::resize-start-pose
+     [:find [?left ?top]
+      :in $ ?frame-id
+      :where
+      [?frame-id :swig.capability.resize/start-left ?left]
+      [?frame-id :swig.capability.resize/start-top ?top]]))

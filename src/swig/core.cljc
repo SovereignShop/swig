@@ -35,7 +35,8 @@
    {:db/ident :swig.frame/top :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
    {:db/ident :swig.frame/left :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
    {:db/ident :swig.container/capabilities :db/valueType :db.type/keyword :db/cardinality :db.cardinality/many}
-   {:db/ident :swig.capability.drag/frame-id :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}])
+   {:db/ident :swig.capability.drag/frame-id :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
+   {:db/ident :swig.frame/ops :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}])
 
 (defn cell [props]
   [:swig.type/cell props []])

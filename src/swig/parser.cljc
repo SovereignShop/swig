@@ -64,6 +64,12 @@
     (:swig.split/ops props)
     (update :swig.split/ops compile-hiccup-impl id-gen id)))
 
+(defmethod compile-hiccup-impl :swig.type/frame
+  [{id :db/id :as props} id-gen _]
+  (cond-> props
+    (:swig.frame/ops props)
+    (update :swig.frame/ops compile-hiccup-impl id-gen id)))
+
 (defmethod compile-hiccup-impl :swig.type/operations
   [props id-gen parent]
   (let [id (swap! id-gen dec)]

@@ -1,7 +1,7 @@
 #?(:cljs
    (ns swig.views
      (:require [clojure.string :as str]
-               [swig.components.containers :refer [capability-container]]
+               [swig.components.containers :refer [capability-container mouse-xy]]
                [swig.components.tabs :refer [horizontal-tabs horizontal-bar-tabs]]
                [re-com.core :refer [box v-box h-split v-split scroller
                                     h-box md-icon-button line]]
@@ -40,13 +40,15 @@
       (let [{:keys [:swig.frame/height
                     :swig.frame/width
                     :swig.frame/left
-                    :swig.frame/top]
+                    :swig.frame/top
+                    :swig.frame/ops]
              :as props} @(re-posh/subscribe [::subs/get-frame id])
             children
             @(re-posh/subscribe [::subs/get-children id [:swig.type/window
                                                          :swig.type/view
                                                          :swig.type/split]])]
         [v-box
+         :attr {:id (str "frame-" id)}
          :style {:position :absolute
                  :border-style "solid"
                  :flex "1 1 0%"
@@ -55,7 +57,8 @@
                  :height height
                  :top top
                  :left left}
-         :children (mapv dispatch children)]))))
+         :children (into (mapv dispatch (:swig.operations/ops ops))
+                         (mapv dispatch children))]))))
 
 #?(:cljs
    (defmethod dispatch :swig.operation/divide-horizontal [{:keys [:db/id]}]
@@ -104,13 +107,30 @@
 
 #?(:cljs
    (defmethod dispatch :swig.operation/join [{:keys [:db/id]}]
-     ^{:keys (str "id-" id)}
+     ^{:keys (str "op.join-" id)}
      [md-icon-button
       :size :smaller
       :md-icon-name "zmdi-unfold-less"
       :on-click (fn [event]
                   (.stopPropagation event)
                   (re-posh/dispatch [::events/join-views id]))]))
+
+#?(:cljs
+   (defmethod dispatch :swig.operations/resize [{:keys [db/id] :as props}]
+     (let [frame-id     @(re-posh/subscribe [::subs/op-get-frame id])
+           container-id @(re-posh/subscribe [::subs/get-parent frame-id])]
+       [md-icon-button
+        :style {:position :absolute
+                :bottom   "5px"
+                :right    "5px"}
+        :size :regular
+        :md-icon-name "zmdi-code-setting"
+        :attr {:on-mouse-down
+               (fn [e]
+                 (let [[left top] (mouse-xy e 1.0 (str "frame-" frame-id))]
+                   (println "container-id:" frame-id)
+                   (println "left,top:" left, top)
+                   (re-posh/dispatch [::events/resize-start frame-id left top])))}])))
 
 #?(:cljs
    (defmethod dispatch :swig.type/operations
@@ -144,7 +164,7 @@
              ops        (:swig.tab/ops tab)
              container-id (str "tab-" id)]
          [h-box
-          :attr {:id container-id}
+          :attr {:id (str "swig-" container-id)}
           :style {:flex "1 1 0%"}
           :children
           [^{:key (str "exit-fullscreen-" id)}
@@ -196,6 +216,7 @@
            child
            (if (= tabs-count 0)
              [v-box
+              :attr {:id (str "swig-" view-id)}
               :style {:flex "1 1 0%"}
               :children
               (doall
@@ -204,6 +225,7 @@
                  [dispatch child]))]
              [v-box
               :gap "0px"
+              :attr {:id (str "swig-" view-id)}
               :style {:flex "1 1 0%"}
               :children
               [[v-box

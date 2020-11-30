@@ -201,6 +201,29 @@
     :swig.frame/left left
     :swig.frame/top top}])
 
+(defn resize-start [db frame-id left top]
+  (when-let [resize-container (first (filter (comp :swig.capability/resize
+                                                   set
+                                                   :swig.container/capabilities)
+                                             (ancestor-seq (d/entity db frame-id))))]
+    [{:db/id (:db/id resize-container)
+      :swig.capability.resize/frame-id frame-id}
+     {:db/id frame-id
+      :swig.capability.resize/start-left left
+      :swig.capability.resize/start-top top}]))
+
+(defn resize-frame [db frame-id left top]
+  [{:db/id frame-id
+    :swig.frame/width left
+    :swig.frame/height top}])
+
+(defn resize-stop [db frame-id]
+  (when-let [resize-container (first (filter (comp :swig.capability/resize
+                                                   set
+                                                   :swig.container/capabilities)
+                                             (ancestor-seq (d/entity db frame-id))))]
+    [[:db.fn/retractAttribute (:db/id resize-container) :swig.capability.resize/frame-id]]))
+
 #?(:cljs
    (re-posh/reg-event-ds
     ::enter-fullscreen
@@ -297,3 +320,24 @@
     (fn reg-drag-frame
       [db [_ frame-id left top]]
       (drag-frame db frame-id left top))))
+
+#?(:cljs
+   (re-posh/reg-event-ds
+    ::resize-start
+    (fn reg-resize-start
+      [db [_ frame-id left top]]
+      (resize-start db frame-id left top))))
+
+#?(:cljs
+   (re-posh/reg-event-ds
+    ::resize-frame
+    (fn reg-resize-frame
+      [db [_ frame-id left top]]
+      (resize-frame db frame-id left top))))
+
+#?(:cljs
+   (re-posh/reg-event-ds
+    ::resize-stop
+    (fn reg-event-ds
+      [db [_ frame-id]]
+      (resize-stop db frame-id))))

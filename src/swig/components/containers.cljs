@@ -80,16 +80,45 @@
 
 (defmethod capability-handler :swig.capability/resize
   [child _ {:keys [db/id]}]
-  (let [container-id (str "select-" id)
-        frame-id     @(re-posh/subscribe [::subs/resize-frame-id])]
+  (let [container-id             (str "select-" id)
+        frame-id                 @(re-posh/subscribe [::subs/resize-frame-id id])
+        [offset-left offset-top] @(re-posh/subscribe [::subs/resize-start-pose frame-id])]
     [box
-     :attr {:id container-id}
-     :style {:on-mouse-out
-             (fn [e] e)
-             :on-mouse-down
-             (fn [e] e)
+     :style {:flex "1 1 0%"}
+     :attr  {:id container-id
+             :on-mouse-out
+             (fn [e]
+               (when frame-id
+                 (let [elem (.-relatedTarget e)]
+                   (if-not elem
+                     (re-posh/dispatch [::events/resize-stop frame-id])
+                     (loop [elem (.-parentElement elem)]
+                       (if-not elem
+                         (re-posh/dispatch [::events/resize-stop frame-id])
+                         (when-not (= (.-id elem) container-id)
+                           (recur (.-parentElement elem))))))))
+               e)
+
+             :on-mouse-move
+             (fn [e]
+               (when (and frame-id offset-left offset-top)
+                 (.preventDefault e)
+                 (let [[left top] (mouse-xy e 1.0 container-id)]
+                   (re-posh/dispatch [::events/resize-frame frame-id
+                                      (+ left 0)
+                                      (+ top 0)]))
+                 e))
+
              :on-mouse-up
-             (fn [e] e)}
+             (fn [e]
+               (.preventDefault e)
+               (when frame-id
+                 (let [[left top] (mouse-xy e 1.0 container-id)]
+                   (re-posh/dispatch [::events/resize-frame frame-id
+                                      (+ left 0)
+                                      (+ top 0)])
+                   (re-posh/dispatch [::events/resize-stop frame-id])))
+               e)}
      :child child]))
 
 (defmethod capability-handler :swig.capability/select

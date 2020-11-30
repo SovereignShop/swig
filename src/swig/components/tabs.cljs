@@ -9,7 +9,7 @@
 
 ;;--------------------------------------------------------------------------------------------------
 ;; Component: horizontal-tabs
-;;--------------------------------------------------------------------------------------------------
+;;------------------------------------------------------------------------------------------------ -
 
 (def tabs-args-desc
   [{:name :model     :required true                  :type "unique-id | atom"                                      :description "the unique identifier of the currently selected tab"}
@@ -56,7 +56,6 @@
             (when frame-id
               {:on-mouse-down
                (fn [e]
-                 (println "DRAG FRAME: " frame-id)
                  (let [[left top] (mouse-xy e 1.0 container-id)]
                    (re-posh/dispatch [:swig.events/drag-start frame-id left top]))
                  e)})
