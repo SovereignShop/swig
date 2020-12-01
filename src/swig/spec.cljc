@@ -64,6 +64,7 @@
      [:swig.window/child {:optional true} any?]]
     [:vector any?]]})
 
+
 (def registry
   (merge (m/class-schemas)
          (m/comparator-schemas)

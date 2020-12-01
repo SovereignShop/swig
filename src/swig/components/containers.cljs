@@ -24,9 +24,8 @@
        (throw (js/Error. "No parent"))
        (if (= (.-id rect) container-id)
          (let [r (.getBoundingClientRect rect)]
-           (do (println "MOUSE:" (.-clientX e) (.-left r))
-               [(* (- (.-clientX e) (.-left r)) (/ 1 scale))
-                (* (- (.-clientY e) (.-top r)) (/ 1 scale))]))
+           [(* (- (.-clientX e) (.-left r)) (/ 1 scale))
+            (* (- (.-clientY e) (.-top r)) (/ 1 scale))])
          (recur (.-parentElement rect)))))))
 
 (defn selection [active? start end style]
@@ -141,5 +140,5 @@
      :child child]))
 
 (defn capability-container
-  [{:keys [:swig.container/capabilities :db/id] :as props} child]
+  [{:keys [:swig.container/capabilities] :as props} child]
   (reduce #(capability-handler %1 %2 props) child capabilities))

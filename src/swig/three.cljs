@@ -1,43 +1,7 @@
-(ns swig.core
-  #?(:cljs
-     (:require
-      [swig.views :as views]
-      [swig.parser :refer [hiccup->facts]]
-      [re-posh.core :as re-posh]
-      [reagent.dom :as reagent])))
+(ns swig.three)
 
-(def full-schema
-  [{:db/ident :swig.dispatch/handler :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.ref/previous-parent :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.ref/parent :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.operation/name :db/valueType :db.type/keyword :db/cardinality :db.cardinality/many}
-   {:db/ident :swig/ident :db/unique :db.unique/identity :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one}
-   {:db/ident :swig/type :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one}
-   {:db/ident :swig/index :db/valueType :db.type/long :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.tab/fullscreen :db/valueType :db.type/boolean :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.tab/handler :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.tab/label :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.tab/ops :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.view/ops :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.split/ops :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.tab/order :db/valueType :db.type/long :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.tab/previous-view-id :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.view/active-tab :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.view/previous-active-tab :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.view/tab-type :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.split/orientation :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.split/split-percent :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.cell/element :db/valueType :db.type/string :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.operations/ops :db/valueType :db.type/ref :db/cardinality :db.cardinality/many}
-   {:db/ident :swig.frame/height :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.frame/width :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.frame/top :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.frame/left :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.container/capabilities :db/valueType :db.type/keyword :db/cardinality :db.cardinality/many}
-   {:db/ident :swig.capability.drag/frame-id :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.frame/ops :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-
-   {:db/ident :swig.three.box/dims :db/valueType :db.type/tuple :db/cardinality :db.cardinality/one}
+(def schema
+  [{:db/ident :swig.three.box/dims :db/valueType :db.type/tuple :db/cardinality :db.cardinality/one}
    {:db/ident :swig.three.box/material :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
    {:db/ident :swig.three.perspective-camera/fov :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
    {:db/ident :swig.three.perspective-camera/aspect :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
@@ -81,33 +45,88 @@
    {:db/ident :swig.three.circle/material :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
    {:db/ident :swig.three.material/color :db/valueType :db.type/tuple :db/cardinality :db.cardinality/one}
    {:db/ident :swig.three.object/position :db/valueType :db.type/tuple :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.object/rotation :db/valueType :db.type/tuple :db/cardinality :db.cardinality/one}
+   {:db/ident :swig.three.object/rotation :db/valueType :db.type/tuple :db/cardinality :db.cardinality/one}])
 
-   ])
+(def registry
+  {::perspective-camera
+   [:tuple
+    [:= :swig.type/three.perspective-camera]
+    [:map
+     [:swig.three.perspective-camera/fov :double]
+     [:swig.three.perspective-camera/aspect :double]
+     [:swig.three.perspective-camera/near :double]
+     [:swig.three.perspective-camera/far :double]
+     [:swig.three.perspective-camera/active :boolean]]]
 
-(defn cell [props]
-  [:swig.type/cell props []])
+   ::orthograhic-camera
+   [:tuple
+    [:= :swig.type/three.orthographic-camera]
+    [:map
+     [:swig.three.orthographic-camera/left :double]
+     [:swig.three.orthographic-camera/right :double]
+     [:swig.three.orthographic-camera/top :double]
+     [:swig.three.orthographic-camera/bottom :double]
+     [:swig.three.orthographic-camera/near :double]
+     [:swig.three.orthographic-camera/far :double]
+     [:swig.three.orthographic-camera/active :boolean]]]
 
-(defn tab [props & children]
-  [:swig.type/tab props (vec children)])
+   ::plane
+   [:tuple
+    [:= :swig.type/three.plane]
+    [:map
+     [:swig.three.plane/width :double]
+     [:swig.three.plane/height :double]
+     [:swig.three.plane/width-segments :integer]
+     [:swig.three.plane/height-segments :integer]
+     [:swig.three.plane/depth-segments :integer]
+     [:swig.three.plane/material ::material]]]
 
-(defn view [props & children]
-  [:swig.type/view props (vec children)])
 
-(defn split [props & children]
-  [:swig.type/split props (vec children)])
+   ::sphere
+   [:tuple
+    [:= :swig.type/three.sphere]
+    [:map]]
 
-(defn window [props]
-  [:swig.type/window props []])
+   ::cylinder
+   [:tuple
+    [:= :swig.type/three.cylinder]
+    [:map]]
 
-(defn frame [props & children]
-  [:swig.type/frame props (vec children)])
+   ::circle
+   [:tuple
+    [:= :swig.type/three.circle]
+    [:map]]
 
-#?(:cljs
-   (defn init [layout]
-     (re-posh/dispatch-sync [:swig.events/initialize (hiccup->facts layout)])))
+   ::object
+   [:tuple
+    [:= :swig.type/three.object]
+    [:map]]
 
-#?(:cljs
-   (defn render [view-id]
-     (reagent/render [views/root-component view-id]
-                     (.getElementById js/document "app"))))
+   ::group
+   [:tuple
+    [:= :swig.type/three.group]
+    [:map]]})
+
+(defn perspective-camera [props & children]
+  [:swig.type/three.perspective-camera props (vec children)])
+
+(defn orthographic-camera [props & children]
+  [:swig.type/three.orthographic-camera props (vec children)])
+
+(defn plane [props & children]
+  [:swig.type/three.plane props (vec children)])
+
+(defn sphere [props & children]
+  [:swig.type/three.sphere props (vec children)])
+
+(defn cylinder [props & children]
+  [:swig.type/three.cylinder props (vec children)])
+
+(defn circle [props & children]
+  [:swig.type/three.circle props (vec children)])
+
+(defn object [props & children]
+  [:swig.type/three.object props (vec children)])
+
+(defn group [props & children]
+  [:swig.type/three.group props (vec children)])

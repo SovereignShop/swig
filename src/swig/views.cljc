@@ -117,8 +117,7 @@
 
 #?(:cljs
    (defmethod dispatch :swig.operations/resize [{:keys [db/id] :as props}]
-     (let [frame-id     @(re-posh/subscribe [::subs/op-get-frame id])
-           container-id @(re-posh/subscribe [::subs/get-parent frame-id])]
+     (let [frame-id @(re-posh/subscribe [::subs/op-get-frame id])]
        [md-icon-button
         :style {:position :absolute
                 :bottom   "5px"
@@ -128,8 +127,6 @@
         :attr {:on-mouse-down
                (fn [e]
                  (let [[left top] (mouse-xy e 1.0 (str "frame-" frame-id))]
-                   (println "container-id:" frame-id)
-                   (println "left,top:" left, top)
                    (re-posh/dispatch [::events/resize-start frame-id left top])))}])))
 
 #?(:cljs
@@ -151,8 +148,7 @@
    (defmethod dispatch :swig.type/tab
      ([{:keys [:db/id
                :swig/ident
-               :swig.dispatch/handler
-               :swig.container/capabilities] :as tab}]
+               :swig.dispatch/handler] :as tab}]
       (let [child      (first @(re-posh/subscribe
                                 [::subs/get-children id [:swig.type/split
                                                          :swig.type/frame
@@ -196,6 +192,7 @@
 #?(:cljs
    (defn tab-label-fn [tab]
      (dispatch (:swig.tab/label tab))))
+
 
 #?(:cljs
    (defmethod dispatch :swig.type/view
