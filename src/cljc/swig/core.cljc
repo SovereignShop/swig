@@ -1,8 +1,10 @@
 (ns swig.core
   #?(:cljs
      (:require
+      [swig.events.core]
       [swig.views :as views]
       [swig.parser :refer [hiccup->facts]]
+      [swig.dispatch]
       [re-posh.core :as re-posh]
       [reagent.dom :as reagent])))
 
@@ -35,55 +37,7 @@
    {:db/ident :swig.frame/left :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
    {:db/ident :swig.container/capabilities :db/valueType :db.type/keyword :db/cardinality :db.cardinality/many}
    {:db/ident :swig.capability.drag/frame-id :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.frame/ops :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-
-   {:db/ident :swig.three.box/dims :db/valueType :db.type/tuple :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.box/material :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.perspective-camera/fov :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.perspective-camera/aspect :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.perspective-camera/near :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.perspective-camera/far :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.perspective-camera/active :db/valueType :db.type/boolean :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.orthographic-camera/left :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.orthographic-camera/right :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.orthographic-camera/top :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.orthographic-camera/bottom :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.orthographic-camera/near :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.orthographic-camera/far :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.orthographic-camera/active :db/valueType :db.type/boolean :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.plane/width :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.plane/height :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.plane/width-segments :db/valueType :db.type/long :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.plane/height-segments :db/valueType :db.type/long :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.plane/depth-segments :db/valueType :db.type/long :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.plane/material :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.sphere/radius :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.sphere/width-segments :db/valueType :db.type/long :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.sphere/height-segments :db/valueType :db.type/long :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.sphere/phi-start :db/valueType :db.type/long :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.sphere/phi-length :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.sphere/theta-start :db/valueType :db.type/long :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.sphere/theta-length :db/valueType :db.type/long :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.sphere/material :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.cylinder/radius-top :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.cylinder/radius-bottom :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.cylinder/height :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.cylinder/radial-segments :db/valueType :db.type/long :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.cylinder/height-segments :db/valueType :db.type/long :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.cylinder/open-ended? :db/valueType :db.type/boolean :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.cylinder/theta-start :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.cylinder/theta-length :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.cylinder/material :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.circle/radius :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.circle/segments :db/valueType :db.type/long :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.cricle/theta-start :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.circle/theta-length :db/valueType :db.type/double :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.circle/material :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.material/color :db/valueType :db.type/tuple :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.object/position :db/valueType :db.type/tuple :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.three.object/rotation :db/valueType :db.type/tuple :db/cardinality :db.cardinality/one}
-
-   ])
+   {:db/ident :swig.frame/ops :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}])
 
 (defn cell [props]
   [:swig.type/cell props []])
@@ -105,7 +59,7 @@
 
 #?(:cljs
    (defn init [layout]
-     (re-posh/dispatch-sync [:swig.events/initialize (hiccup->facts layout)])))
+     (re-posh/dispatch-sync [:swig.events.core/initialize (hiccup->facts layout)])))
 
 #?(:cljs
    (defn render [view-id]

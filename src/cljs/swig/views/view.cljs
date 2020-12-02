@@ -1,7 +1,8 @@
 (ns swig.views.view
   (:require
    [swig.components.containers :refer [capability-container]]
-   [swig.methods :as methods]
+   [swig.components.tabs :refer [horizontal-tabs horizontal-bar-tabs]]
+   [swig.dispatch :as methods]
    [reagent.ratom :refer [reaction]]
    [reagent.core :as r]
    [re-posh.core :as re-posh]
@@ -46,7 +47,7 @@
              :style {:flex "1 1 0%"}
              :children
              [^{:key (str "layout-h-tabs-" view-id)}
-              [(case view-type :bar re/horizontal-bar-tabs re/horizontal-tabs)
+              [(case view-type :bar horizontal-bar-tabs horizontal-tabs)
                :style (if (or (= (count @tabs) 1)
                               (:swig.tab/fullscreen @active-tab))
                         {:visibility "hidden"

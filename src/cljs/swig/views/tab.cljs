@@ -1,7 +1,7 @@
 (ns swig.views.tab
   (:require
    [swig.components.containers :refer [capability-container]]
-   [swig.methods :as methods]
+   [swig.dispatch :as methods]
    [re-posh.core :as re-posh]
    [re-com.core :as re]))
 

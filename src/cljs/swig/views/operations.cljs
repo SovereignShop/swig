@@ -1,7 +1,7 @@
 (ns swig.views.operations
   (:require
    [swig.utils :refer [mouse-xy]]
-   [swig.methods :as methods]
+   [swig.dispatch :as methods]
    [re-posh.core :as re-posh]
    [re-com.core :as re]))
 

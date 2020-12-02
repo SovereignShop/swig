@@ -1,6 +1,7 @@
 (ns swig.views.window
   (:require
-   [swig.methods :as methods]))
+   [swig.dispatch :as methods]))
 
 (defmethod methods/dispatch :swig.type/window
-  ([props] (methods/wrap props)))
+  ([props]
+   (methods/wrap props)))

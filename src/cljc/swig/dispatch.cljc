@@ -1,4 +1,4 @@
-(ns swig.methods)
+(ns swig.dispatch)
 
 (defn swig-dispatch-fn
   ([props]
@@ -14,6 +14,8 @@
                  ([props] (:swig/ident props))
                  ([props _] (:swig/ident props))))
 
-(defmethod wrap :default [_ elem] elem)
+(defmethod wrap :default
+  ([props] [:div (str ::erorr props)])
+  ([_ elem] elem))
 
 (defmulti capability-handler (comp second list))

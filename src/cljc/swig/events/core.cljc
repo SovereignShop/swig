@@ -1,5 +1,5 @@
 (ns swig.events.core
   (:require
-   [swig.macros :as m]))
+   [swig.macros #?(:cljs :refer-macros :clj :refer) [def-event-ds]]))
 
-(m/def-event-ds ::initialize [_ facts] facts)
+(def-event-ds :swig.events.core/initialize [_ facts] facts)

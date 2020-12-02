@@ -1,9 +1,11 @@
 (ns swig.subs.view
   (:require
+   [re-posh.core :as re-posh]
    [swig.macros :as m]))
 
+
 (m/def-sub :swig.subs.view/get-active-tab
-  '[:find (pull ?tab-id [:swig.tab/fullscreen
+  [:find (pull ?tab-id [:swig.tab/fullscreen
                          :swig.tab/handler
                          :swig.tab/label
                          :swig.tab/order
@@ -16,8 +18,8 @@
     :where
     [?view-id :swig.view/active-tab ?tab-id]])
 
-(m/def-sub ::get-tabs
-  '[:find (pull ?tab-id [:swig.tab/fullscreen
+(m/def-sub :swig.subs.view/get-tabs
+  [:find (pull ?tab-id [:swig.tab/fullscreen
                          :swig.tab/handler
                          :swig.ref/parent
                          {:swig.tab/label
@@ -43,7 +45,7 @@
    :swig.view/tab-type])
 
 (m/def-sub :swig.subs.view/get-view-ids
-  '[:find [?view-id ...]
-    :in $ ?split-id
-    :where
-    [?view-id :swig.ref/parent ?split-id]])
+  [:find [?view-id ...]
+   :in $ ?split-id
+   :where
+   [?view-id :swig.ref/parent ?split-id]])

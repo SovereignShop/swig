@@ -11,32 +11,32 @@
    :swig/type])
 
 (m/def-sub :swig.subs.element/get-parent
-  '[:find ?parent-id .
+  [:find ?parent-id .
     :in $ ?id
     :where
     [?id :swig.ref/parent ?parent-id]])
 
 (m/def-sub ::get-handler
-  '[:find ?handler .
-    :in $ ?view-id
-    :where
-    [?view-id :swig.dispatch/handler ?handler]])
+  [:find ?handler .
+   :in $ ?view-id
+   :where
+   [?view-id :swig.dispatch/handler ?handler]])
 
 (m/def-sub :swig.subs.element/get-type
-  '[:find ?type .
-    :in $ ?id
-    :where
-    [?id :swig/type ?type]])
+  [:find ?type .
+   :in $ ?id
+   :where
+   [?id :swig/type ?type]])
 
 (m/def-sub :swig.subs.element/get-children
-  '[:find (pull ?child-id [:db/id
-                           :swig.tab/ops
-                           :swig.container/capabilities
-                           :swig/ident
-                           :swig/index
-                           :swig.dispatch/handler
-                           :swig/type])
-    :in $ ?id [?type ...]
-    :where
-    [?child-id :swig.ref/parent ?id]
-    [?child-id :swig/type ?type]])
+  [:find (pull ?child-id [:db/id
+                          :swig.tab/ops
+                          :swig.container/capabilities
+                          :swig/ident
+                          :swig/index
+                          :swig.dispatch/handler
+                          :swig/type])
+   :in $ ?id [?type ...]
+   :where
+   [?child-id :swig.ref/parent ?id]
+   [?child-id :swig/type ?type]])

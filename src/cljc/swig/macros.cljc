@@ -16,9 +16,8 @@
   [k args & body]
   (let [sym (symbol (name k))]
     `(do (defn ~sym ~args ~@body)
-         #?(:cljs
-            (re-posh.core/reg-event-ds ~k (fn [db params]
-                                            (apply ~sym db (next params))))))))
+         (re-posh.core/reg-event-ds ~k (fn [db# params#]
+                                         (apply ~sym db# (next params#)))))))
 
 (defn compile-query [query]
   (match query

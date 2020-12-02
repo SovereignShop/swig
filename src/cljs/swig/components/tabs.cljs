@@ -3,7 +3,6 @@
   (:require [re-com.util     :refer [deref-or-value]]
             [re-com.box      :refer [flex-child-style]]
             [re-com.validate :refer [css-style? html-attr? vector-of-maps?] :refer-macros [validate-args-macro]]
-            [swig.subs :as subs]
             [re-posh.core :as re-posh]))
 
 
@@ -46,7 +45,7 @@
         tabs     (deref-or-value tabs)
         _        (assert (not-empty (filter #(= current (id-fn %)) tabs)) "model not found in tabs vector")
         frame-id (if view-id
-                   @(re-posh/subscribe [::subs/get-drag-frame view-id])
+                   @(re-posh/subscribe [:swig.subs.drag/get-drag-frame view-id])
                    nil)
         container-id (str "tabs-" view-id)]
     [:ul

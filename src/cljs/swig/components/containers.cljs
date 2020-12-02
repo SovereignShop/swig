@@ -1,9 +1,7 @@
 (ns swig.components.containers
   (:require
    [swig.utils :refer [mouse-xy to-tlwh]]
-   [swig.methods :as methods]
-   [swig.subs :as subs]
-   [swig.events :as events]
+   [swig.dispatch :as methods]
    [re-posh.core :as re-posh]
    [re-com.core :as re]))
 
@@ -16,7 +14,7 @@
   [child _ {:keys [db/id]}]
   (let [container-id             (str "drag-" id)
         frame-id                 @(re-posh/subscribe [:swig.subs.drag/drag-frame-id id])
-        [offset-left offset-top] @(re-posh/subscribe [::subs/drag-offsets frame-id])]
+        [offset-left offset-top] @(re-posh/subscribe [:swig.subs.drag/drag-offsets frame-id])]
     [re/box
      :style {:flex "1 1 0%"}
      :attr  {:id container-id
@@ -51,14 +49,14 @@
                    (re-posh/dispatch [:swig.events.drag/drag-frame frame-id
                                       (- left offset-left)
                                       (- top offset-top)])
-                   (re-posh/dispatch [::events/drag-stop frame-id])))
+                   (re-posh/dispatch [:swig.events.drag/drag-stop frame-id])))
                e)}
      :child child]))
 
 (defmethod methods/capability-handler :swig.capability/resize
   [child _ {:keys [db/id]}]
   (let [container-id             (str "select-" id)
-        frame-id                 @(re-posh/subscribe [::subs/resize-frame-id id])
+        frame-id                 @(re-posh/subscribe [:swig.subs.resize/resize-frame-id id])
         {:keys [swig.capability.resize/start-left
                 swig.capability.resize/start-top
                 swig.frame/left
@@ -75,7 +73,7 @@
                      (re-posh/dispatch [:swig.events.resize/resize-stop frame-id])
                      (loop [elem (.-parentElement elem)]
                        (if-not elem
-                         (re-posh/dispatch [::events/resize-stop frame-id])
+                         (re-posh/dispatch [:swig.events.resize/resize-stop frame-id])
                          (when-not (= (.-id elem) container-id)
                            (recur (.-parentElement elem))))))))
                e)
