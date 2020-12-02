@@ -4,7 +4,7 @@
    [datascript.core :as d]
    [swig.macros :as m]))
 
-(m/def-event-ds ::join-views
+(m/def-event-ds :swig.events.view/join-views
   [db id]
   (let [split (event-utils/find-ancestor (d/entity db id) :swig.type/split)
         split-id (:db/id split)

@@ -4,7 +4,7 @@
    [datascript.core :as d]
    [swig.macros :as m]))
 
-(m/def-event-ds ::resize-start
+(m/def-event-ds :swig.events.resize/resize-start
   [db frame-id left top]
   (when-let [resize-container (first (filter (comp :swig.capability/resize
                                                    set
@@ -17,13 +17,13 @@
         :swig.capability.resize/start-left (- (:swig.frame/width frame) left)
         :swig.capability.resize/start-top  (- (:swig.frame/height frame) top)}])))
 
-(m/def-event-ds ::resize-frame
-  [db frame-id left top]
+(m/def-event-ds :swig.events.resize/resize-frame
+  [_ frame-id left top]
   [{:db/id frame-id
     :swig.frame/width left
     :swig.frame/height top}])
 
-(m/def-event-ds ::resize-stop
+(m/def-event-ds :swig.events.resize/resize-stop
   [db frame-id]
   (when-let [resize-container (first (filter (comp :swig.capability/resize
                                                    set
