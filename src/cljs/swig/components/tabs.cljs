@@ -57,7 +57,7 @@
               {:on-mouse-down
                (fn [e]
                  (let [[left top] (mouse-xy e 1.0 container-id)]
-                   (re-posh/dispatch [:swig.events/drag-start frame-id left top]))
+                   (re-posh/dispatch [:swig.events.drag/drag-start frame-id left top]))
                  e)})
             attr)
      (for [t tabs]

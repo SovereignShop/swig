@@ -1,0 +1,37 @@
+(ns swig.views.tab
+  (:require
+   [swig.components.containers :refer [capability-container]]
+   [swig.methods :as methods]
+   [re-posh.core :as re-posh]
+   [re-com.core :as re]))
+
+(defmethod methods/dispatch :swig.type/tab
+  ([{:keys [:db/id] :as tab}]
+   (let [child        (first @(re-posh/subscribe
+                               [:swig.subs.element/get-children
+                                id
+                                [:swig.type/split
+                                 :swig.type/frame
+                                 :swig.type/view]]))
+         ops          (:swig.tab/ops tab)
+         container-id (str "tab-" id)]
+     (->> [re/h-box
+           :attr  {:id (str "swig-" container-id)}
+           :style {:flex "1 1 0%"}
+           :children
+           [^{:key (str "exit-fullscreen-" id)}
+            [re/md-icon-button
+             :style (if (:swig.tab/fullscreen tab)
+                      {}
+                      {:visibility "hidden"
+                       :display    "none"})
+             :size :smaller
+             :md-icon-name "zmdi-close"
+             :on-click (fn [_]
+                         (re-posh/dispatch [:swig.events.tab/exit-fullscreen id]))]
+            (when ops
+              (methods/dispatch ops))
+            (when child
+              (methods/dispatch child))]]
+          (capability-container tab)
+          (methods/wrap tab)))))
