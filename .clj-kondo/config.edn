@@ -1,0 +1,1 @@
+{:lint-as {swig.macros/def-event-ds clojure.core/defn}}
