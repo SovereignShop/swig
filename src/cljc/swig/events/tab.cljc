@@ -116,4 +116,3 @@
   (let [tab (d/entity db tab-id)]
     (conj (event-utils/update-active-tab db tab)
           [:db.fn/retractAttribute tab-id :swig.ref/parent])))
-e

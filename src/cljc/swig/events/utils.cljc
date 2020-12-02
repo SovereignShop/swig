@@ -1,4 +1,6 @@
-(ns swig.events.utils)
+(ns swig.events.utils
+  (:require
+   [datascript.core :as d]))
 
 (defn find-ancestor [elem type]
   (let [elem-type (:swig/type elem)]

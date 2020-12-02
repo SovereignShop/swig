@@ -4,7 +4,7 @@
       :cljs [cljs.test :as t :include-macros true])
    [datascript.core :as d]
    [swig.parser :refer [hiccup->facts]]
-   [swig.events :as e]
+   [swig.events.drag :as e]
    [swig.core :as swig]
    [test-utils :as tu]))
 
