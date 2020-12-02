@@ -9,13 +9,13 @@
   [props]
   (let [split-id (:db/id props)
         children (sort-by :swig/index
-                          @(re-posh/subscribe [::subs/get-children
+                          @(re-posh/subscribe [:swig.subs.element/get-children
                                                split-id
                                                [:swig.type/view
                                                 :swig.type/tab
                                                 :swig.type/split]]))
-        split    @(re-posh/subscribe [::subs/get-split split-id])
-        ops      (set @(re-posh/subscribe [::subs/get-op-names (->> split :swig.split/ops (map :db/id))]))]
+        split    @(re-posh/subscribe [:siwg.subs.split/get-split split-id])
+        ops      (set @(re-posh/subscribe [:swig.subs.operations/get-op-names (->> split :swig.split/ops (map :db/id))]))]
     (methods/wrap props
                   [(case (:swig.split/orientation split) :horizontal re/h-split :vertical re/v-split)
                    :on-split-change #(re-posh/dispatch [::events/set-split-percent (:db/id split) %])

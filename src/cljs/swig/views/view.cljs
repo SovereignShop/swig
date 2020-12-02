@@ -14,16 +14,16 @@
   [props]
   (let [view-id       (:db/id props)
         {view-ops :swig.view/ops view-type :swig.view/tab-type}
-        @(re-posh/subscribe [::subs/get-view-ops view-id])
+        @(re-posh/subscribe [:swig.subs.view/get-view-ops view-id])
         children      @(re-posh/subscribe [:swig.subs.element/get-children
                                            view-id
                                            [:swig.type/window
                                             :swig.type/view
                                             :swig.type/frame
                                             :swig.type/split]])
-        tabs          (re-posh/subscribe [:swig.subs.tab/get-tabs view-id])
+        tabs          (re-posh/subscribe [:swig.subs.view/get-tabs view-id])
         tabs-count    (count @tabs)
-        active-tab    (re-posh/subscribe [:swig.subs.tab/get-active-tab view-id])
+        active-tab    (re-posh/subscribe [:swig.subs.view/get-active-tab view-id])
         active-tab-id (:db/id @active-tab)
         _             (when-not (contains? (set (map :db/id @tabs)) active-tab-id)
                         (js/console.warn "No active-tab for view:" view-id))

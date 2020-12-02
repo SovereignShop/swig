@@ -14,8 +14,8 @@
 
 (defmethod methods/capability-handler :swig.capability/drag
   [child _ {:keys [db/id]}]
-  (let [container-id (str "drag-" id)
-        frame-id     @(re-posh/subscribe [:swig.subs.drag/drag-frame-id id])
+  (let [container-id             (str "drag-" id)
+        frame-id                 @(re-posh/subscribe [:swig.subs.drag/drag-frame-id id])
         [offset-left offset-top] @(re-posh/subscribe [::subs/drag-offsets frame-id])]
     [re/box
      :style {:flex "1 1 0%"}

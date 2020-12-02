@@ -2,13 +2,13 @@
   (:require
    [swig.macros :as m]))
 
-(m/def-sub ::get-op-names
+(m/def-sub :swig.subs.operations/get-op-names
   '[:find [?name ...]
     :in $ [?id ...]
     :where
     [?id :swig.operation/name ?name]])
 
-(m/def-pull-sub ::get-operation
+(m/def-pull-sub :swig.subs.operations/get-operation
   [:db/id
    :swig/type])
 
@@ -17,7 +17,7 @@
     :swig/type
     :swig.operations/ops])
 
-(m/def-sub ::op-get-frame
+(m/def-sub :swig.subs.operations/op-get-frame
   '[:find ?frame-id .
     :in $ ?op-id
     :where

@@ -2,7 +2,7 @@
   (:require
    [swig.macros :as m]))
 
-(m/def-pull-sub ::get-frame
+(m/def-pull-sub :swig.subs.frame/get-frame
   [:swig.frame/left
    :swig.frame/top
    :swig.frame/width

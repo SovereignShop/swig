@@ -11,12 +11,14 @@
                  :swig.frame/left
                  :swig.frame/top
                  :swig.frame/ops]}
-         @(re-posh/subscribe [::subs/get-frame id])
+         @(re-posh/subscribe [:swig.subs.frame/get-frame id])
 
          children
-         @(re-posh/subscribe [::subs/get-children id [:swig.type/window
-                                                      :swig.type/view
-                                                      :swig.type/split]])]
+         @(re-posh/subscribe [:swig.subs.element/get-children
+                              id
+                              [:swig.type/window
+                               :swig.type/view
+                               :swig.type/split]])]
      (methods/wrap props
                    [re/v-box
                     :attr {:id (str "frame-" id)}
