@@ -83,7 +83,7 @@
 
 (defn hiccup->facts
   ([hiccup]
-   (hiccup->facts -100000 hiccup))
+   (hiccup->facts nil hiccup))
   ([parent hiccup]
    (let [id-gen (atom -1)
          valid? (m/validate :swig.spec/view hiccup {:registry spec/registry})]
@@ -96,12 +96,10 @@
              (conj (vec (mapcat (partial run id)(range) children))
                    (compile-hiccup-impl
                     (cond-> (assoc props
-                                   :swig.ref/parent parent
                                    :db/id id
                                    :swig/index idx
                                    :swig/type swig-type)
-                      (not= parent -100000)
-                      (assoc :swig.ref/parent parent))
+                      parent (assoc :swig.ref/parent parent))
                     id-gen
                     parent)))))
         parent 0 hiccup)))))
