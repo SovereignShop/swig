@@ -25,7 +25,8 @@
     [[:db.fn/retractAttribute (:db/id drag-container) :swig.capability.drag/frame-id]]))
 
 (m/def-event-ds ::drag-frame
-  [_ frame-id left top]
+  [_ frame-id left top & {:keys [no-save?]}]
+  ^{:db.transaction/no-save no-save?}
   [{:db/id frame-id
     :swig.frame/left left
     :swig.frame/top top}])

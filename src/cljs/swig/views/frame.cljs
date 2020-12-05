@@ -23,6 +23,7 @@
                    [re/v-box
                     :attr {:id (str "frame-" id)}
                     :style {:position :absolute
+                            :transition "width 0.3s 0.005s, height 0.3s 0.005s, top 0.3s 0.005s, left 0.3s 0.005s, transform 0.5s"
                             :border-style "solid"
                             :flex "1 1 0%"
                             :box-shadow "5px 5px"
