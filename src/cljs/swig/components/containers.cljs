@@ -24,7 +24,7 @@
                      :no-save? true]))
 
 (def debounced-drag
-  (debounce drag-function 0.2))
+  (debounce drag-function 0.1))
 
 (defn distance [x1 y1 x2 y2]
   (Math/sqrt (Math/pow (- x2 x1) 2)

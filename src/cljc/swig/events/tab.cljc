@@ -2,13 +2,15 @@
   (:require
    [swig.events.utils :as event-utils]
    [datascript.core :as d]
-   [swig.macros :as m]))
+   #?(:cljs [swig.macros :refer-macros [def-event-ds]]
+      :clj [swig.macros :refer [def-event-ds]])))
 
 (def root-view [:swig/ident :swig/root-view])
 
-(m/def-event-ds :swig.events.tab/enter-fullscreen
-  [db tab-id]
-  (let [tab (d/entity db tab-id)
+(def-event-ds :swig.events.tab/enter-fullscreen
+  [db id]
+  (let [tab (event-utils/find-ancestor (d/entity db id) :swig.type/tab)
+        tab-id (:db/id tab)
         main-view  (d/entity db root-view)
         active-tab (:db/id (:swig.view/active-tab main-view))]
     (into (event-utils/update-active-tab db tab-id)
@@ -20,7 +22,7 @@
             :swig.view/active-tab          tab-id
             :swig.view/previous-active-tab active-tab}])))
 
-(m/def-event-ds :swig.events.tab/exit-fullscreen
+(def-event-ds :swig.events.tab/exit-fullscreen
   [db tab-id]
   (let [tab                 (d/entity db tab-id)
         previous-parent-id  (:db/id (:swig.ref/previous-parent tab))
@@ -36,17 +38,19 @@
      {:db/id                root-view
       :swig.view/active-tab previous-active-tab}]))
 
-(m/def-event-ds :swig.events.tab/set-active-tab
+(def-event-ds :swig.events.tab/set-active-tab
   [_ view-id tab-id]
   [[:db/add view-id :swig.view/active-tab tab-id]])
 
-(m/def-event-ds ::move-tab
+(def-event-ds ::move-tab
   [_ tab-id view-id]
   [[:db/add tab-id :swig.ref/parent view-id]])
 
-(m/def-event-ds :swig.events.tab/divide-tab
-  [db tab-id orientation]
-  (let [view-id
+(def-event-ds :swig.events.tab/divide-tab
+  [db id orientation]
+  (let [tab (event-utils/find-ancestor (d/entity db id) :swig.type/tab)
+        tab-id (:db/id tab)
+        view-id
         (d/q '[:find ?view-id .
                :in $ ?tab-id
                :where
@@ -105,13 +109,13 @@
                   :when (not= id tab-id)]
               [:db/add id :swig.ref/parent -1]))))
 
-(m/def-event-ds :swig.events.tab/delete-tab
+(def-event-ds :swig.events.tab/delete-tab
   [db tab-id]
   (let [tab (d/entity db tab-id)]
     (conj (event-utils/update-active-tab db tab)
           [:db/retractEntity tab-id])))
 
-(m/def-event-ds :swig.events.tab/kill-tab
+(def-event-ds :swig.events.tab/kill-tab
   [db tab-id]
   (let [tab (d/entity db tab-id)]
     (conj (event-utils/update-active-tab db tab)

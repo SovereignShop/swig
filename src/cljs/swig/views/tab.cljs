@@ -1,4 +1,4 @@
-(ns swig.views.tab
+(ns ^:dev/always swig.views.tab
   (:require
    [swig.components.containers :refer [capability-container]]
    [swig.dispatch :as methods]
@@ -7,6 +7,7 @@
 
 (defmethod methods/dispatch :swig.type/tab
   ([{:keys [:db/id] :as tab}]
+   (println "TAB:" tab)
    (let [child        (first @(re-posh/subscribe
                                [:swig.subs.element/get-children
                                 id
@@ -32,6 +33,6 @@
             (when ops
               (methods/dispatch ops))
             (when child
-              (methods/dispatch child))]]
-          (capability-container tab)
-          (methods/wrap tab)))))
+              (methods/dispatch child))
+            (methods/wrap (dissoc tab :swig.tab/fullscreen :swig.ref/parent))]]
+          (capability-container tab)))))

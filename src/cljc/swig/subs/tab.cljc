@@ -8,6 +8,7 @@
    :swig.tab/label
    :swig.tab/order
    :swig.tab/ops
+   :swig/index
    :swig/type
    :swig.ref/parent
    :swig/ident

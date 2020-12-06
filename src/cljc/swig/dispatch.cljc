@@ -15,7 +15,7 @@
                  ([props _] (:swig/ident props))))
 
 (defmethod wrap :default
-  ([props] [:div (str ::erorr props)])
+  ([props] [:div (str ::erorr " " props)])
   ([_ elem] elem))
 
 (defmulti capability-handler (comp second list))

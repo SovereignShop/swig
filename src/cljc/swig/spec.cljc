@@ -30,7 +30,7 @@
     [:= :swig.type/tab]
     [:map
      [:swig.tab/fullscreen {:optional true} :boolean]
-     [:swig.tab/ops {:optional true} [:vector ::operation]]]
+     [:swig.tab/ops {:optional true} any?]]
     [:vector [:or [:ref ::frame] [:ref ::view] [:ref ::split]]]]
 
    ::view-ops
