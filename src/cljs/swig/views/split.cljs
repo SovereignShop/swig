@@ -5,6 +5,9 @@
    [clojure.string :as str]
    [re-com.core :as re]))
 
+(defn maps [f coll]
+  (into #{} (map f) coll))
+
 (defmethod methods/dispatch :swig.type/split
   [props]
   (let [split-id (:db/id props)
@@ -15,7 +18,7 @@
                                                 :swig.type/tab
                                                 :swig.type/split]]))
         split    @(re-posh/subscribe [:swig.subs.split/get-split split-id])
-        ops      (set @(re-posh/subscribe [:swig.subs.operations/get-op-names (->> split :swig.split/ops (map :db/id))]))]
+        ops     (->> split :swig.split/ops :swig.operations/ops (maps :swig/type))]
     (methods/wrap props
                   [(case (:swig.split/orientation split) :horizontal re/h-split :vertical re/v-split)
                    :on-split-change #(re-posh/dispatch [:swig.events.split/set-split-percent (:db/id split) %])
@@ -28,5 +31,5 @@
                                                      (.stopPropagation event)
                                                      (re-posh/dispatch [:swig.events.view/join-views split-id]))))}
                    :initial-split   (:swig.split/split-percent split)
-                   :panel-1         [methods/dispatch (first children)]
-                   :panel-2         [methods/dispatch (second children)]])))
+                   :panel-1 [methods/dispatch (first children)]
+                   :panel-2 [methods/dispatch (second children)]])))

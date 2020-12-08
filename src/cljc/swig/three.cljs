@@ -107,6 +107,9 @@
     [:= :swig.type/three.group]
     [:map]]})
 
+(defn scene [props & children]
+  [:swig.type/three.scene props (vec children)])
+
 (defn perspective-camera [props & children]
   [:swig.type/three.perspective-camera props (vec children)])
 

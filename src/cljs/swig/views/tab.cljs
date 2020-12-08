@@ -30,8 +30,9 @@
              :md-icon-name "zmdi-close"
              :on-click (fn [_]
                          (re-posh/dispatch [:swig.events.tab/exit-fullscreen id]))]
-            (when ops
-              (methods/dispatch ops))
+            (when-not (:swig.tab/fullscreen tab)
+              (when ops
+                (methods/dispatch ops)))
             (when child
               (methods/dispatch child))
             (methods/wrap (dissoc tab :swig.tab/fullscreen :swig.ref/parent))]]
