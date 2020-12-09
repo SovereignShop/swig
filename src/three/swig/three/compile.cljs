@@ -15,10 +15,9 @@
 (defn find-elem-idx [children type]
   (loop [[c & cs] children
          idx 0]
-    (cond (isa? type (:swig/type c)) idx
+    (cond (isa? (:swig/type c) type) idx
           (nil? cs) nil
           :else (recur cs (inc idx)))))
-
 
 (defmulti construct-scene :swig/type)
 
@@ -43,7 +42,7 @@
            swig/children]}]
   (let [camera-idx (find-elem-idx children :swig.type/three.camera)
         elems      (mapv construct-scene children)
-        camera     (nth elems camera-idx)]
+        camera     (:three/obj (nth elems camera-idx))]
     (doto (cond-> (OrbitControls. camera *dom-node*)
             enableDamping (oset! "enableDamping" enableDamping)
             autoRotate    (oset! "autoRotate" autoRotate)
@@ -53,7 +52,7 @@
             minPolarAngle (oset! "minPolarAngle" minPolarAngle)
             maxPolarAngle (oset! "maxPolarAngle" maxPolarAngle))
       (.addEventListener "end" #(println "end"))
-      (.addEventListener "move" #(println "move")))))
+      (.addEventListener "change" #(println "change")))))
 
 
 (defmethod construct-scene :swig.type/three.perspective-camera
@@ -62,10 +61,19 @@
            three.perspective-camera/near
            three.perspective-camera/far
            three.perspective-camera/active
+           three.object/position
+           three.object/rotation
+           three.object/scale
            swig/children]
+    :or {position #js [0 0 0]
+         rotation #js [0 0 0]
+         scale 1.0}
     :as props}]
   (let [elems (map construct-scene children)
         cam   (three/PerspectiveCamera.)]
+    (set! (.-position cam) (into-array position))
+    (set! (.-rotation cam) (into-array rotation))
+    (set! (.-scale cam) scale)
     (cond-> cam
       fov    (oset! "fov" fov)
       aspect (oset! "aspect" aspect)
@@ -83,18 +91,27 @@
            three.plane/depth
            three.plane/width-segments
            three.plane/height-segments
+           three.object/position
+           three.object/rotation
+           three.object/scale
            three.plane/material
            swig/children]
-    :or {width 1.0
-         height 1.0
-         depth 1.0
-         width-segments 1
-         height-segments 1
-         depth-segments 1}
-    :as props}]
+    :or   {width           1.0
+           height          1.0
+           depth           1.0
+           width-segments  1
+           height-segments 1
+           depth-segments  1
+           position        #js [1 1 1]
+           rotation        #js [1 1 1]
+           scale           1.0}
+    :as   props}]
   (let [elems (map construct-scene children)
         plane (three/Mesh (three/PlaneGeometry. width height width-segments height-segments)
                           (three/MeshBasicMaterial.))]
+    (set! (.-position plane) position)
+    (set! (.-rotation plane) rotation)
+    (set! (.-scale plane) scale)
     (doseq [{:keys [three/obj]} elems]
       (.add plane obj))
     (assoc props :three/obj plane)))
@@ -103,17 +120,21 @@
 (defmethod construct-scene :swig.type/three.object
   [{:keys [three.object/position
            three.object/rotation
+           three.object/scale
            swig/children]
-    :or {position [1 1 1]
-         rotation [1 1 1]}
+    :or {position #js [1 1 1]
+         rotation #js [1 1 1]
+         scale 1.0}
     :as props}]
   (let [elems (map construct-scene children)
         object (three/Object3D.)]
     (set! (.-position object) (into-array position))
     (set! (.-rotation object) (into-array rotation))
+    (set! (.-scale object) scale)
     (doseq [{:keys [three/obj]} elems]
       (.add object obj))
     (assoc props :three/obj object)))
+
 
 (defmethod construct-scene :swig.type/three.sphere
   [{:keys [three.sphere/radius
@@ -123,6 +144,9 @@
            three.sphere/phi-length
            three.sphere/theta-start
            three.sphere/theta-length
+           three.object/position
+           three.object/rotation
+           three.object/scale
            three.object/material
            swig/children]
     :or   {radius          1.0
@@ -131,7 +155,9 @@
            phi-start       0
            phi-length      (* Math/PI 2)
            theta-start     0
-           theta-length    Math/PI}
+           theta-length    Math/PI
+           position #js [0 0 0]
+           rotation #js [0 0 0]}
     :as props}]
   (let [elems (map construct-scene children)
         mesh (three/Mesh. (three/SphereGeometry. radius
@@ -142,9 +168,13 @@
                                                  theta-start
                                                  theta-length)
                           (three/MeshBasicMaterial.))]
-    #_(doseq [{:keys [three/obj]} elems]
-      (.add mesh obj))
+    (set! (.-position mesh) position)
+    (set! (.-rotation mesh) rotation)
+    (set! (.-scale mesh) scale)
+    (doseq [{:keys [three/obj]} elems]
+        (.add mesh obj))
     (assoc props :three/obj mesh)))
+
 
 (defmethod construct-scene :swig.type/three.box
   [{:keys [three.box/width
@@ -154,14 +184,20 @@
            three.box/height-segments
            three.box/depth-segments
            three.box/material
+           three.object/position
+           three.object/rotation
+           three.object/scale
            swig/children]
     :or   {width           1.0
            height          1.0
            depth           1.0
            width-segments  1
            height-segments 1
-           depth-segments  1}
-    :as props}]
+           depth-segments  1
+           position        #js [0 0 0]
+           rotation        #js [0 0 0]
+           scale           1.0}
+    :as   props}]
   (let [elems (map construct-scene children)
         box   (three/Mesh. (three/BoxGeometry. width
                                                height
@@ -169,7 +205,10 @@
                                                width-segments
                                                height-segments
                                                depth-segments)
-                          (three/MeshBasicMaterial.))]
+                           (three/MeshBasicMaterial.))]
+    (set! (.-position box) position)
+    (set! (.-rotation box) rotation)
+    (set! (.-scale box) scale)
     (doseq [{:keys [three/obj]} elems]
       (.add box obj))
     (assoc props :three/obj box)))
