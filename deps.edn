@@ -11,7 +11,7 @@
         metosin/malli          {:mvn/version "0.2.1"}
         datascript             {:mvn/version "0.18.4"
                                 :exclusions  [org.clojure/clojurescript]}}
- :paths ["src/cljs" "src/cljc"]
+ :paths ["src/cljs" "src/cljc" "src/three"]
  :aliases
  {:dev
   {:extra-deps  {com.bhauman/figwheel-main {:mvn/version "0.2.0-SNAPSHOT"}

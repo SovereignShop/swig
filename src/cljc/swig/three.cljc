@@ -107,6 +107,9 @@
     [:= :swig.type/three.group]
     [:map]]})
 
+(defn orbit-controls [props & children]
+  [:swig.type/three.orbit-controls props (vec children)])
+
 (defn scene [props & children]
   [:swig.type/three.scene props (vec children)])
 
@@ -115,6 +118,9 @@
 
 (defn orthographic-camera [props & children]
   [:swig.type/three.orthographic-camera props (vec children)])
+
+(defn box [props & children]
+  [:swig.type/three.box props (vec children)])
 
 (defn plane [props & children]
   [:swig.type/three.plane props (vec children)])
