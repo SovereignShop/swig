@@ -231,7 +231,6 @@
          :swig/type type
          :swig/children (map to-tree children)))
 
-
 (defn- to-facts [scene-tree]
   (parser/hiccup->facts scene-tree))
 
