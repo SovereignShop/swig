@@ -1,8 +1,18 @@
-(ns swig.three.state)
+(ns swig.three.state
+  (:require
+   [swig.parser :as parser]
+   [swig.three.compile :as tc]
+   [datascript.core :as d]))
 
 (def three-entities (atom {}))
 
-(defn three-listener [{:keys [tx-data tx-data]}]
+(defn construct-entities! [tempids db]
+  (doseq [[_ id] tempids]
+    (->> id (d/entity id) parser/facts->hiccup tc/create-scene)))
+
+(defn three-listener! [{:keys [tx-data tx-data tempids db-after tx-meta]}]
+  #_(when-not (:no-construct tx-meta)
+    (construct-entities! tempids db-after))
   (let [entities @three-entities]
     (doseq [d tx-data]
       (case (.-a d)
