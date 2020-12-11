@@ -1,8 +1,6 @@
 (ns swig.three.state
   (:require
-   [swig.parser :as parser]
    [swig.three.helpers :as helpers]
-   [swig.three.compile :as tc]
    [datascript.core :as d]
    [datascript.db :as db :refer [datom-added]]))
 
