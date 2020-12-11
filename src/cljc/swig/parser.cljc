@@ -86,23 +86,25 @@
    (hiccup->facts nil hiccup))
   ([parent hiccup]
    (let [id-gen (atom -1)
-         valid? (m/validate :swig.spec/view hiccup {:registry spec/registry})]
+         valid? true #_(m/validate :swig.spec/view hiccup {:registry spec/registry})]
      (if (not valid?)
        (throw (ex-info "Schema Validation Failed"
                        (m/explain :swig.spec/view hiccup {:registry spec/registry})))
-       ((fn run [parent idx [swig-type props children]]
-          (lazy-seq
-           (let [id (or (:db/id props) (swap! id-gen dec))]
-             (conj (vec (mapcat (partial run id)(range) children))
-                   (compile-hiccup-impl
-                    (cond-> (assoc props
-                                   :db/id id
-                                   :swig/index idx
-                                   :swig/type swig-type)
-                      parent (assoc :swig.ref/parent parent))
-                    id-gen
-                    parent)))))
-        parent 0 hiccup)))))
+       (let [facts ((fn run [parent idx [swig-type props children]]
+                      (lazy-seq
+                       (let [id (or (:db/id props) (swap! id-gen dec))]
+                         (conj (vec (mapcat (partial run id)(range) children))
+                               (compile-hiccup-impl
+                                (cond-> (assoc props
+                                               :db/id id
+                                               :swig/index idx
+                                               :swig/type swig-type)
+                                  parent (assoc :swig.ref/parent parent))
+                                id-gen
+                                parent)))))
+                    parent 0 hiccup)]
+         (println "DUMBFACTS:" (map (juxt :db/id :swig.ref/parent) facts))
+         facts)))))
 
 (defn facts->hiccup
   ([facts]

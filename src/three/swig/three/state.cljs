@@ -1,41 +1,40 @@
 (ns swig.three.state
   (:require
    [swig.parser :as parser]
+   [swig.three.helpers :as helpers]
    [swig.three.compile :as tc]
-   [datascript.core :as d]))
+   [datascript.core :as d]
+   [datascript.db :as db :refer [datom-added]]))
 
-(def three-entities (atom {}))
+(defn update-three! [db f ^int e v]
+  (let [ent (-> db (d/entity e))        ; TODO: cache entities
+        obj (:three/obj ent)]
+    (f obj v)))
 
-(defn construct-entities! [tempids db]
-  (doseq [[_ id] tempids]
-    (->> id (d/entity id) parser/facts->hiccup tc/create-scene)))
-
-(defn three-listener! [{:keys [tx-data tx-data tempids db-after tx-meta]}]
-  #_(when-not (:no-construct tx-meta)
-    (construct-entities! tempids db-after))
-  (let [entities @three-entities]
-    (doseq [d tx-data]
+(defn three-listener! [{:keys [tx-data db-after tx-meta]}]
+  (when-not (:swig.tx/no-update? tx-meta)
+    (doseq [^db/Datom d tx-data]
       (case (.-a d)
         :three.object/position
-        (when (.-added d)
-          (set! (.-position (get entities (.-e d))) (into-array (.-v d))))
+        (when (datom-added d)
+          (update-three! db-after helpers/set-position! (.-e d) (.-v d)))
 
         :three.object/rotation
-        (when (.-added d)
-          (set! (.-rotation (get entities (.-e d))) (into-array (.-v d))))
+        (when (datom-added d)
+          (update-three! db-after helpers/set-rotation! (.-e d) (.-v d)))
 
         :three.object/scale
-        (when (.-added d)
-          (set! (.-scale (get entities (.-e d))) (.-v d)))
+        (when (datom-added d)
+          (update-three! db-after helpers/set-scale! (.-e d) (.-v d)))
 
         :three.object/cast-shadow
-        (if (.-added d)
-          (set! (.-castShadow (get entities (.-e d))) (.-v d))
-          (set! (.-castShadow (get entities (.-e d))) (.-v d)))
+        (if (datom-added d)
+          (update-three! db-after helpers/set-cast-shadow! (.-e d) (.-v d))
+          (update-three! db-after helpers/set-cast-shadow! (.-e d) false))
 
         :three.object/receive-shadow
-        (if (.-added d)
-          (set! (.-receiveShadow (get entities (.-e d))) (.-v d))
-          (set! (.-recieveShadow (get entities (.-e d))) false))
+        (if (datom-added d)
+          (update-three! db-after helpers/set-receive-shadow! (.-e d) (.-v d))
+          (update-three! db-after helpers/set-receive-shadow! (.-e d) false))
 
-        :else nil))))
+        nil))))

@@ -60,7 +60,7 @@
     (doseq [{:keys [three/obj]} elems]
       (.add scene obj))
     (cond-> props
-      true     (assoc :three/obj scene :three/camera camera)
+      true     (assoc :three/obj scene :three/camera camera :swig/children elems :swig/ident :swig.ident/scene)
       controls (update :three/controls construct-orbit-controls camera))))
 
 
@@ -91,7 +91,9 @@
       active (oset! "active" active))
     (doseq [{:keys [three/obj]} elems]
       (.add cam obj))
-    (assoc props :three/obj cam)))
+    (assoc props
+           :three/obj cam
+           :swig/children elems)))
 
 
 (defmethod construct-scene :swig.type/three.plane
@@ -123,7 +125,9 @@
     (helpers/set-scale! plane scale)
     (doseq [{:keys [three/obj]} elems]
       (.add plane obj))
-    (assoc props :three/obj plane)))
+    (assoc props
+           :three/obj plane
+           :swig/children elems)))
 
 
 (defmethod construct-scene :swig.type/three.object
@@ -142,7 +146,9 @@
     (helpers/set-scale! object scale)
     (doseq [{:keys [three/obj]} elems]
       (.add object obj))
-    (assoc props :three/obj object)))
+    (assoc props
+           :three/obj object
+           :swig/children elems)))
 
 
 (defmethod construct-scene :swig.type/three.sphere
@@ -178,13 +184,15 @@
                                                  phi-length
                                                  theta-start
                                                  theta-length)
-                          (new three/MeshBasicMaterial (clj->js material)))]
+                          (three/MeshBasicMaterial. (clj->js material)))]
     (helpers/set-position! mesh position)
     (helpers/set-rotation! mesh rotation)
     (helpers/set-scale! mesh scale)
     (doseq [{:keys [three/obj]} elems]
         (.add mesh obj))
-    (assoc props :three/obj mesh)))
+    (assoc props
+           :three/obj mesh
+           :swig/children elems)))
 
 
 (defmethod construct-scene :swig.type/three.box
@@ -223,7 +231,9 @@
     (helpers/set-scale! box scale)
     (doseq [{:keys [three/obj]} elems]
       (.add box obj))
-    (assoc props :three/obj box)))
+    (assoc props
+           :three/obj box
+           :swig/children elems)))
 
 
 (defn- to-tree [[type props children]]
@@ -231,8 +241,14 @@
          :swig/type type
          :swig/children (map to-tree children)))
 
+
+(defn to-hiccup [{:keys [swig/type swig/children] :as props}]
+  [type (dissoc props :swig/children) (mapv to-hiccup children)])
+
+
 (defn- to-facts [scene-tree]
   (parser/hiccup->facts scene-tree))
 
+
 (defn create-scene [tree]
-  (-> tree to-tree construct-scene #_to-facts))
+  (-> tree to-tree construct-scene))
