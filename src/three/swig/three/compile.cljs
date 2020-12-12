@@ -1,12 +1,16 @@
 (ns swig.three.compile
   (:require
+   [goog.dom :as gdom]
    [swig.parser :as parser]
    [three :as three]
    [swig.three.helpers :as helpers]
+   [swig.three.methods :as methods]
    [three-orbitcontrols :as OrbitControls]
+   [re-posh.core :as re-posh]
    [oops.core :refer [oget oset!]]))
 
 (def ^:dynamic *dom-node* nil)
+(def id-offset 1000000)
 
 (derive :swig.type/three.perspective-camera :swig.type/three.camera)
 (derive :swig.type/three.ortho-camera       :swig.type/three.camera)
@@ -34,10 +38,11 @@
            three.orbit-controls/minPolarAngle
            three.orbit-controls/maxPolarAngle]
     :as props}
+   dom-node
    camera]
   (assoc props
          :three/obj
-         (doto (cond-> (OrbitControls. camera *dom-node*)
+         (doto (cond-> (OrbitControls. camera dom-node)
                  enableDamping (oset! "enableDamping" enableDamping)
                  autoRotate    (oset! "autoRotate" autoRotate)
                  zoomSpeed     (oset! "zoomSpeed" zoomSpeed)
@@ -45,9 +50,15 @@
                  maxDistance   (oset! "maxDistance" maxDistance)
                  minPolarAngle (oset! "minPolarAngle" minPolarAngle)
                  maxPolarAngle (oset! "maxPolarAngle" maxPolarAngle))
-           (.addEventListener "end" #(println "end"))
-           (.addEventListener "change" #(println "change")))))
+           (.addEventListener "end" #(re-posh/dispatch [:three.swig.events/end (+ id-offset (.-id camera))]))
+           (.addEventListener "start" #(re-posh/dispatch [:three.swig.events/start (+ id-offset (.-id camera))]))
+           (.addEventListener "change" #(re-posh/dispatch [:three.swig.events/change (+ id-offset (.-id camera))])))))
 
+#_(defn construct-event-handlers [obj id handlers]
+  (for [{:keys [swig/type three.events/name]} handlers]
+    (case type
+      :three.events/end    (.addEventListener "end" (fn [t] #_(methods/three-event {:event/name name })))
+      :three.events/change (.addEventListener "change" (fn [t])))))
 
 (defmethod construct-scene :swig.type/three.scene
   [{:keys [swig/children
@@ -56,12 +67,21 @@
   (let [elems      (map construct-scene children)
         camera-idx (find-elem-idx children :swig.type/three.camera)
         camera     (:three/obj (nth elems camera-idx))
-        scene (three/Scene.)]
+        scene      (three/Scene.)
+        dom-node   (doto (.createElement js/document "div")
+                     (oset! "style.width" "100%")
+                     (oset! "style.height" "100%"))
+        canvas     (.appendChild dom-node (.createElement js/document "canvas"))
+        renderer   (three/WebGLRenderer. #js {:canvas canvas})]
     (doseq [{:keys [three/obj]} elems]
       (.add scene obj))
     (cond-> props
-      true     (assoc :three/obj scene :three/camera camera :swig/children elems :swig/ident :swig.ident/scene)
-      controls (update :three/controls construct-orbit-controls camera))))
+      true     (assoc :three/obj scene
+                      :three/camera camera
+                      :three/renderer renderer
+                      :three/dom-node dom-node
+                      :swig/children elems)
+      controls (update :three/controls construct-orbit-controls dom-node camera))))
 
 
 (defmethod construct-scene :swig.type/three.perspective-camera
@@ -178,12 +198,12 @@
     :as   props}]
   (let [elems (map construct-scene children)
         mesh  (three/Mesh. (three/SphereGeometry. radius
-                                                 width-segments
-                                                 height-segments
-                                                 phi-start
-                                                 phi-length
-                                                 theta-start
-                                                 theta-length)
+                                                  width-segments
+                                                  height-segments
+                                                  phi-start
+                                                  phi-length
+                                                  theta-start
+                                                  theta-length)
                           (three/MeshBasicMaterial. (clj->js material)))]
     (helpers/set-position! mesh position)
     (helpers/set-rotation! mesh rotation)
@@ -241,12 +261,16 @@
          :swig/type type
          :swig/children (map to-tree children)))
 
+(defn entid [entity-name]
+  (-> entity-name str hash-string Math/abs))
 
-(defn to-hiccup [{:keys [swig/type swig/children] :as props}]
-  [type (dissoc props :swig/children) (mapv to-hiccup children)])
+(defn to-hiccup [{:keys [swig/type swig/children three/obj] :as props}]
+  [type
+   (dissoc props :swig/children)
+   (mapv to-hiccup children)])
 
 
-(defn- to-facts [scene-tree]
+(defn to-facts [scene-tree]
   (parser/hiccup->facts scene-tree))
 
 

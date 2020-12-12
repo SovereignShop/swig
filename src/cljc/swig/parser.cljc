@@ -38,7 +38,7 @@
   (s/or :empty-element ::empty-element
         :element ::element))
 
-(def internal-keys #{:db/id :swig/index :swig.ref/parent :swig/type})
+(def internal-keys #{:swig/index :swig.ref/parent :swig/type})
 
 (defmulti compile-hiccup-impl (fn [elem _ _] (:swig/type elem)))
 
@@ -103,7 +103,6 @@
                                 id-gen
                                 parent)))))
                     parent 0 hiccup)]
-         (println "DUMBFACTS:" (map (juxt :db/id :swig.ref/parent) facts))
          facts)))))
 
 (defn facts->hiccup
@@ -117,9 +116,9 @@
                           [?id :swig.ref/parent ?parent]]
                         facts
                         parent-id)]
-     (into [(:swig/type parent) (into {} (remove (comp internal-keys key)) parent)]
-           (mapv #(facts->hiccup % facts)
-                 (sort-by :swig/index children))))))
+     [(:swig/type parent) (into {} (remove (comp internal-keys key)) parent)
+      (mapv #(facts->hiccup % facts)
+            (sort-by :swig/index children))])))
 
 (comment
 
