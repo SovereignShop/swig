@@ -134,6 +134,27 @@
 (defn circle [props & children]
   [:swig.type/three.circle props (vec children)])
 
+(defn cone [props & children]
+  [:swig.type/three.cone props (vec children)])
+
+(defn dodecahedron [props & children]
+  [:swig.type/three.dodecahedron props (vec children)])
+
+(defn icosahedron [props & children]
+  [:swig.type/three.icosahedron props (vec children)])
+
+(defn octahedron [props & children]
+  [:swig.type/three.octahedron props (vec children)])
+
+(defn ring [props & children]
+  [:swig.type/three.ring props (vec children)])
+
+(defn tetrahedron [props & children]
+  [:swig.type/three.tetrahedron props (vec children)])
+
+(defn torus [props & children]
+  [:swig.type/three.torus props (vec children)])
+
 (defn object [props & children]
   [:swig.type/three.object props (vec children)])
 

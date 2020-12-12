@@ -4,7 +4,6 @@
    [swig.parser :as parser]
    [three :as three]
    [swig.three.helpers :as helpers]
-   [swig.three.methods :as methods]
    [three-orbitcontrols :as OrbitControls]
    [re-posh.core :as re-posh]
    [oops.core :refer [oget oset!]]))
@@ -117,15 +116,16 @@
 
 
 (defmethod construct-scene :swig.type/three.plane
-  [{:keys [three.plane/width
-           three.plane/height
-           three.plane/depth
-           three.plane/width-segments
-           three.plane/height-segments
+  [{:keys [three.shape/width
+           three.shape/height
+           three.shape/depth
+           three.shape/width-segments
+           three.shape/height-segments
+           three.shape/material
            three.object/position
            three.object/rotation
            three.object/scale
-           three.plane/material
+           three.object/up
            swig/children]
     :or   {width           1.0
            height          1.0
@@ -135,14 +135,17 @@
            depth-segments  1
            position        [1 1 1]
            rotation        [1 1 1]
-           scale           [1 1 1]}
+           scale           [1 1 1]
+           up              [0 1 0]
+           material        {:color "blue"}}
     :as   props}]
   (let [elems (map construct-scene children)
-        plane (three/Mesh (three/PlaneGeometry. width height width-segments height-segments)
-                          (three/MeshBasicMaterial.))]
+        plane (three/Mesh. (three/PlaneGeometry. width height width-segments height-segments)
+                           (three/MeshBasicMaterial. (clj->js material)))]
     (helpers/set-position! plane position)
     (helpers/set-rotation! plane rotation)
     (helpers/set-scale! plane scale)
+    (helpers/set-up! plane up)
     (doseq [{:keys [three/obj]} elems]
       (.add plane obj))
     (assoc props
@@ -214,6 +217,267 @@
            :three/obj mesh
            :swig/children elems)))
 
+(defmethod construct-scene :swig.type/three.cylinder
+  [{:keys [three.shape/radius-top
+           three.shape/radius-bottom
+           three.shape/height
+           three.shape/radial-segments
+           three.shape/height-segments
+           three.shape/open-ended?
+           three.shape/theta-start
+           three.shape/theta-length
+           three.shape/material
+           three.object/rotation
+           three.object/position
+           three.object/scale
+           three.object/up
+           swig/children]
+    :or   {radius-top      1.0
+           radius-bottom   1.0
+           height          1.0
+           radial-segments 8
+           height-segments 1
+           position        [0 0 0]
+           rotation        [0 0 0]
+           scale           [1 1 1]
+           up              [0 1 0]
+           theta-start     0
+           theta-length    (* Math/PI 2)}
+    :as props}]
+  (let [elems (map construct-scene children)
+        mesh (three/Mesh. (three/CylinderGeometry. radius-top
+                                                   radius-bottom
+                                                   height
+                                                   radial-segments
+                                                   height-segments
+                                                   open-ended?
+                                                   theta-start
+                                                   theta-length)
+                          (three/MeshBasicMaterial. (clj->js material)))]
+    (helpers/set-position! mesh position)
+    (helpers/set-rotation! mesh rotation)
+    (helpers/set-scale! mesh scale)
+    (helpers/set-up! mesh up)
+    (doseq [{:keys [three/obj]} elems]
+      (.add mesh obj))
+    (assoc props
+           :three/obj mesh
+           :swig/children elems)))
+
+
+(defmethod construct-scene :swig.type/three.cone
+  [{:keys [three.shape/radius
+           three.shape/height
+           three.shape/radial-segments
+           three.shape/height-segments
+           three.shape/open-ended?
+           three.shpae/theta-start
+           three.shape/theta-length
+           three.shape/material
+           three.object/position
+           three.object/rotation
+           three.object/scale
+           swig/children]
+    :or {radius 1.0
+         height 1.0
+         radial-segments 8
+         height-segments 1
+         theta-start 0
+         theta-length (* 2 Math/PI)}
+    :as props}]
+  (let [elems (map construct-scene children)
+        cone (three/Mesh. (three/ConeGeometry. radius height
+                                               radial-segments height-segments
+                                               open-ended?
+                                               theta-start theta-length)
+                          (helpers/mesh-phong-material material))]
+    (helpers/set-position! cone position)
+    (helpers/set-rotation! cone rotation)
+    (helpers/set-scale! cone scale)
+    (doseq [{:keys [three/obj]} elems]
+      (.add cone obj))
+    (assoc props
+           :three/obj cone
+           :swig/children elems)))
+
+(defmethod construct-scene :swig.type/three.dodecahedron
+  [{:keys [three.shape/radius
+           three.shape/detail
+           three.shape/material
+           three.object/position
+           three.object/rotation
+           three.object/scale
+           swig/children]
+    :or {radius 1.0
+         detail 0.0
+         position [0 0 0]
+         rotation [0 0 0]
+         scale [1 1 1]}
+    :as props}]
+  (let [elems (map construct-scene children)
+        geo (three/Mesh. (three/DodecahedronGeometry. radius detail)
+                         (helpers/mesh-phong-material material))]
+    (helpers/set-position! geo position)
+    (helpers/set-rotation! geo rotation)
+    (helpers/set-scale! geo scale)
+    (doseq [{:keys [three/obj]} elems]
+      (.add geo obj))
+    (assoc props
+           :three/obj geo
+           :swig/children elems)))
+
+(defmethod construct-scene :swig.type/three.icosahedron
+  [{:keys [three.shape/radius
+           three.shape/detail
+           three.shape/material
+           three.object/position
+           three.object/rotation
+           three.object/scale
+           swig/children]
+    :or {radius 1.0
+         detail 0.0
+         position [0 0 0]
+         rotation [0 0 0]
+         scale [1 1 1]}
+    :as props}]
+  (let [elems (map construct-scene children)
+        geo (three/Mesh. (three/IcosahedronGeometry. radius detail)
+                         (helpers/mesh-phong-material material))]
+    (helpers/set-position! geo position)
+    (helpers/set-rotation! geo rotation)
+    (helpers/set-scale! geo scale)
+    (doseq [{:keys [three/obj]} elems]
+      (.add geo obj))
+    (assoc props
+           :three/obj geo
+           :swig/children elems)))
+
+(defmethod construct-scene :swig.type/three.octahedron
+  [{:keys [three.shape/radius
+           three.shape/detail
+           three.shape/material
+           three.object/position
+           three.object/rotation
+           three.object/scale
+           swig/children]
+    :or   {radius   1.0
+           detail   0.0
+           position [0 0 0]
+           rotation [0 0 0]
+           scale    [1 1 1]}
+    :as   props}]
+  (let [elems (map construct-scene children)
+        geo   (three/Mesh. (three/OctahedronGeometry. radius detail)
+                         (helpers/mesh-phong-material material))]
+    (helpers/set-position! geo position)
+    (helpers/set-rotation! geo rotation)
+    (helpers/set-scale! geo scale)
+    (doseq [{:keys [three/obj]} elems]
+      (.add geo obj))
+    (assoc props
+           :three/obj geo
+           :swig/children elems)))
+
+
+(defmethod construct-scene :swig.type/three.ring
+  [{:keys [three.shape/inner-radius
+           three.shape/outer-radius
+           three.shape/theta-segments
+           three.shape/phi-segments
+           three.shape/theta-start
+           three.shape/theta-length
+           three.shape/material
+           three.object/position
+           three.object/rotation
+           three.object/scale
+           swig/children]
+    :or {inner-radius 0.5
+         outer-radius 1.0
+         theta-segments 8
+         phi-segments 8
+         theta-start 0
+         theta-length (* 2 Math/PI)
+         position [0 0 0]
+         rotation [0 0 0]
+         scale [1 1 1]}
+    :as props}]
+  (let [elems (map construct-scene children)
+        geo (three/Mesh. (three/RingGeometry. inner-radius outer-radius
+                                              theta-segments phi-segments
+                                              theta-start theta-length)
+                         (three/MeshBasicMaterial. material))]
+    (helpers/set-position! geo position)
+    (helpers/set-rotation! geo rotation)
+    (helpers/set-scale! geo scale)
+    (doseq [{:keys [three/obj]} elems]
+      (.add geo obj))
+    (assoc props
+           :three/obj geo
+           :swig/children elems)))
+
+
+(defmethod construct-scene :swig.type/three.tetrahedron
+  [{:keys [three.shape/radius
+           three.shape/detail
+           three.shape/material
+           three.object/position
+           three.object/rotation
+           three.object/scale
+           swig/children]
+    :or   {radius   1.0
+           detail   0.0
+           position [0 0 0]
+           rotation [0 0 0]
+           scale    [1 1 1]}
+    :as   props}]
+  (let [elems (map construct-scene children)
+        geo   (three/Mesh. (three/TetrahedronGeometry. radius detail)
+                         (three/MeshBasicMaterial. (clj->js material)))]
+    (helpers/set-position! geo position)
+    (helpers/set-rotation! geo rotation)
+    (helpers/set-scale! geo scale)
+    (doseq [{:keys [three/obj]} elems]
+      (.add geo obj))
+    (assoc props
+           :three/obj geo
+           :swig/children elems)))
+
+
+(defmethod construct-scene :swig.type/three.torus
+  [{:keys [three.shape/radius
+           three.shape/tube
+           three.shape/radial-segments
+           three.shape/tubular-segments
+           three.shape/arc
+           three.shape/material
+           three.object/position
+           three.object/rotation
+           three.object/scale
+           three.object/up
+           swig/children]
+    :or   {radius           1.0
+           tube             0.4
+           radial-segments  8
+           tubular-segments 6
+           arc              (* 2 Math/PI)
+           position         [0 0 0]
+           rotation         [0 0 0]
+           scale            [1 1 1]
+           up               [0 1 0]}
+    :as   props}]
+  (let [elems (map construct-scene children)
+        geo   (three/Mesh. (three/TorusGeometry. radius tube radial-segments tubular-segments arc)
+                           (three/MeshBasicMaterial. (clj->js material)))]
+    (helpers/set-position! geo position)
+    (helpers/set-rotation! geo rotation)
+    (helpers/set-scale! geo scale)
+    (helpers/set-up! geo up)
+    (doseq [{:keys [three/obj]} elems]
+      (.add geo obj))
+    (assoc props
+           :three/obj geo
+           :swig/children elems)))
+
 
 (defmethod construct-scene :swig.type/three.box
   [{:keys [three.box/width
@@ -261,8 +525,10 @@
          :swig/type type
          :swig/children (map to-tree children)))
 
+
 (defn entid [entity-name]
   (-> entity-name str hash-string Math/abs))
+
 
 (defn to-hiccup [{:keys [swig/type swig/children three/obj] :as props}]
   [type

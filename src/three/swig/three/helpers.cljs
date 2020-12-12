@@ -89,6 +89,14 @@
   (.set (.-scale obj) x y z)
   obj)
 
+(defn set-up! [^js obj [x y z]]
+  (.set (.-up obj) x y z)
+  obj)
+
+(defn set-visible! [^js obj visible]
+  (.set (.-visible obj) visible)
+  obj)
+
 (defn set-cast-shadow! [^js obj ?true]
   (set! (.-castShadow obj) ?true)
   obj)

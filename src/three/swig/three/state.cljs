@@ -23,7 +23,7 @@
                       (three-compile/to-facts))]
         (re-posh/dispatch [:swig.events.core/initialize facts])))))
 
-(defn create-type! [ db ^db/Datom d]
+(defn create-type! [db ^db/Datom d]
   (when-let [obj (:three/obj (:swig.ref/parent (d/entity db (.-e d))))]))
 
 (defn three-listener! [{:keys [tx-data db-after tx-meta]}]
@@ -42,6 +42,15 @@
         (when (datom-added d)
           (update-three! db-after helpers/set-scale! (.-e d) (.-v d)))
 
+        :three.object/visible
+        (when (datom-added d)
+          (update-three! db-after helpers/set-visible! (.-e d) (.-v d))
+          (update-three! db-after helpers/set-visible! (.-e d) false))
+
+        :three.object/up
+        (when (datom-added d)
+          (update-three! db-after helpers/set-up! (.-e d) (.-v d)))
+
         :three.object/cast-shadow
         (if (datom-added d)
           (update-three! db-after helpers/set-cast-shadow! (.-e d) (.-v d))
@@ -58,10 +67,10 @@
           (when (datom-added d)
             (create-scene! db-after d))
 
-          #_:swig.type/three.object
-          #_(if (datom-added d)
-              nil
-              nil)
+          :swig.type/three.object
+          (if (datom-added d)
+            nil
+            nil)
 
           #_:swig.type/three.box
           #_(if (datom-added d)
