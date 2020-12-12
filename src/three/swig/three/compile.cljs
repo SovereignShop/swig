@@ -283,7 +283,10 @@
          radial-segments 8
          height-segments 1
          theta-start 0
-         theta-length (* 2 Math/PI)}
+         theta-length (* 2 Math/PI)
+         position        [0 0 0]
+         rotation        [0 0 0]
+         scale           [1 1 1]}
     :as props}]
   (let [elems (map construct-scene children)
         cone (three/Mesh. (three/ConeGeometry. radius height
@@ -391,18 +394,18 @@
            three.object/rotation
            three.object/scale
            swig/children]
-    :or {inner-radius 0.5
-         outer-radius 1.0
-         theta-segments 8
-         phi-segments 8
-         theta-start 0
-         theta-length (* 2 Math/PI)
-         position [0 0 0]
-         rotation [0 0 0]
-         scale [1 1 1]}
-    :as props}]
+    :or   {inner-radius   0.5
+           outer-radius   1.0
+           theta-segments 8
+           phi-segments   8
+           theta-start    0
+           theta-length   (* 2 Math/PI)
+           position       [0 0 0]
+           rotation       [0 0 0]
+           scale          [1 1 1]}
+    :as   props}]
   (let [elems (map construct-scene children)
-        geo (three/Mesh. (three/RingGeometry. inner-radius outer-radius
+        geo   (three/Mesh. (three/RingGeometry. inner-radius outer-radius
                                               theta-segments phi-segments
                                               theta-start theta-length)
                          (three/MeshBasicMaterial. material))]
