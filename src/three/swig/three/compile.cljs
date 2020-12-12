@@ -519,6 +519,240 @@
            :three/obj box
            :swig/children elems)))
 
+(defmethod construct-scene :swig.type/three.torus-knot
+  [{:keys [three.shape/radius
+           three.shape/tube
+           three.shape/tubular-segments
+           three.shape/radial-segments
+           three.shape/p
+           three.shape/q
+           three.object/position
+           three.object/rotation
+           three.object/scale
+           three.object/material
+           swig/children]
+    :or {radius 1.0
+         tube 0.4
+         tubular-segments 64
+         radial-segments 8
+         p 2
+         q 3
+         position [0 0 0]
+         rotation [0 0 0]
+         scale [1 1 1]}
+    :as props}]
+  (let [elems (map construct-scene children)
+        geo (three/Mesh. (three/TorusKnotGeometry. radius tube tubular-segments radial-segments p q)
+                         (three/MeshBasicGeometry. (clj->js material)))]
+    (helpers/set-position! geo position)
+    (helpers/set-rotation! geo rotation)
+    (helpers/set-scale! geo scale)
+    (doseq [{:keys [three/obj]} elems]
+      (.add geo obj))
+    (assoc props
+           :three/obj geo
+           :swig/children elems)))
+
+
+(defmethod construct-scene :swig.type/three.shape
+  [{:keys [three.shape/shape
+           three.shape/material
+           three.object/position
+           three.object/rotation
+           three.object/scale
+           swig/children]
+    :or   {position [0 0 0]
+           rotation [0 0 0]
+           scale    [1 1 1]}
+    :as   props}]
+  (let [elems (map construct-scene children)
+        geo   (three/Mesh. (three/ShapeGeometry. shape)
+                         (three/MeshBasicGeometry. (clj->js material)))]
+    (helpers/set-position! geo position)
+    (helpers/set-rotation! geo rotation)
+    (helpers/set-scale! geo scale)
+    (doseq [{:keys [three/obj]} elems]
+      (.add geo obj))
+    (assoc props
+           :three/obj geo
+           :swig/children elems)))
+
+
+(defmethod construct-scene :swig.type/three.ambient-light
+  [{:keys [three.light/color
+           three.light/intensity
+           three.object/position
+           three.object/rotation
+           three.object/scale
+           swig/children]
+    :or   {color     0xFFFFFF
+           intensity 1.0
+           position  [0 0 0]
+           rotation  [0 0 0]
+           scale     [1 1 1]}
+    :as   props}]
+  (let [light (three/AmbientLight. color intensity)]
+    (helpers/set-position! light position)
+    (helpers/set-rotation! light rotation)
+    (helpers/set-scale! light scale)
+    (assoc props
+           :three/obj light
+           :three/children children)))
+
+
+(defmethod construct-scene :swig.type/three.point-light
+  [{:keys [three.light/color
+           three.light/intensity
+           three.light/distance
+           three.light/decay
+           three.object/position
+           three.object/rotation
+           three.object/scale
+           swig/children]
+    :or   {color     0xFFFFFF
+           intensity 1.0
+           distance  0
+           decay     1.0
+           position  [0 0 0]
+           rotation  [0 0 0]
+           scale     [1 1 1]}
+    :as   props}]
+  (let [elems (map construct-scene children)
+        light (three/PointLight. color intensity distance decay)]
+    (helpers/set-position! light position)
+    (helpers/set-rotation! light rotation)
+    (helpers/set-scale! light scale)
+    (assoc props
+           :three/obj light
+           :three/children elems)))
+
+
+(defmethod construct-scene :swig.type/three.hemisphere-light
+  [{:keys [three.light/sky-color
+           three.light/ground-color
+           three.light/intensity
+           three.object/position
+           three.object/rotation
+           three.object/scale
+           swig/children]
+    :or   {sky-color    0xFFFFFF
+           ground-color 0xFFFFFF
+           intensity    1
+           position     [0 0 0]
+           rotation     [0 0 0]
+           scale        [1 1 1]}
+    :as   props}]
+  (let [elems (map construct-scene children)
+        light (three/HemisphereLight. sky-color ground-color intensity)]
+    (helpers/set-position! light position)
+    (helpers/set-rotation! light rotation)
+    (helpers/set-scale! light scale)
+    (assoc props
+           :three/obj light
+           :three/children elems)))
+
+
+(defmethod construct-scene :swig.type/three.directional-light
+  [{:keys [three.light/color
+           three.light/intensity
+           three.object/position
+           three.object/rotation
+           three.object/scale
+           swig/children]
+    :or   {color     0xFFFFFF
+           intensity 1.0
+           position  [0 0 0]
+           rotation  [0 0 0]
+           scale     [1 1 1]}
+    :as   props}]
+  (let [elems (map construct-scene children)
+        light (three/DirectionalLight. color intensity)]
+    (helpers/set-position! light position)
+    (helpers/set-rotation! light rotation)
+    (helpers/set-scale! light scale)
+    (assoc props
+           :three/obj light
+           :three/children elems)))
+
+
+(defmethod construct-scene :swig.type/rect-area-light
+  [{:keys [three.light/color
+           three.light/intensity
+           three.light/width
+           three.light/height
+           three.object/position
+           three.object/rotation
+           three.object/scale
+           swig/children]
+    :or   {color     0xFFFFFF
+           intensity 1.0
+           width     10.0
+           height    10.0
+           position  [0 0 0]
+           rotation  [0 0 0]
+           scale     [1 1 1]}
+    :as   props}]
+  (let [elems (map construct-scene children)
+        light (three/RectAreaLight. color intensity width height)]
+    (helpers/set-position! light position)
+    (helpers/set-rotation! light rotation)
+    (helpers/set-scale! light scale)
+    (assoc props
+           :three/obj light
+           :three/children elems)))
+
+
+(defmethod construct-scene :swig.type/splot-light
+  [{:keys [three.light/color
+           three.light/intensity
+           three.light/distance
+           three.light/angle
+           three.light/penumbra
+           three.light/decay
+           three.object/position
+           three.object/rotation
+           three.object/scale
+           swig/children]
+    :or   {color     0xFFFFFF
+           intensity 1.0
+           distance  0
+           angle     (/ Math/PI 2)
+           penumbra  0.0
+           decay     1.0
+           position  [0 0 0]
+           rotation  [0 0 0]
+           scale     [1 1 1]}
+    :as   props}]
+  (let [elems (map construct-scene children)
+        light (three/SpotLight. color intensity distance angle penumbra decay)]
+    (helpers/set-position! light position)
+    (helpers/set-rotation! light rotation)
+    (helpers/set-scale! light scale)
+    (assoc props
+           :three/obj light
+           :three/children elems)))
+
+
+(defmethod construct-scene :swig.type/three.text
+  [{:keys [three.text/text
+           three.shape/material
+           three.object/position
+           three.object/rotation
+           three.object/scale
+           swig/children]
+    :or   {position  [0 0 0]
+           rotation  [0 0 0]
+           scale     [1 1 1]}
+    :as   props}]
+  (let [elems (map construct-scene children)
+        geo   (helpers/text-geometry text material)]
+    (helpers/set-position! geo position)
+    (helpers/set-rotation! geo rotation)
+    (helpers/set-scale! geo scale)
+    (assoc props
+           :three/obj geo
+           :three/children elems)))
+
 
 (defn- to-tree [[type props children]]
   (assoc props
