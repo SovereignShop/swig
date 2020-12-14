@@ -29,26 +29,26 @@
 
 
 (defn construct-orbit-controls
-  [{:keys [three.orbit-controls/enableDamping
-           three.orbit-controls/autoRotate
-           three.orbit-controls/zoomSpeed
-           three.orbit-controls/minDistance
-           three.orbit-controls/maxDistance
-           three.orbit-controls/minPolarAngle
-           three.orbit-controls/maxPolarAngle]
-    :as props}
+  [{:keys [three.controls/enable-damping
+           three.controls/auto-rotate
+           three.controls/zoom-speed
+           three.controls/min-distance
+           three.controls/max-distance
+           three.controls/min-polar-angle
+           three.controls/max-polar-angle]
+    :as   props}
    dom-node
    camera]
   (assoc props
          :three/obj
          (doto (cond-> (OrbitControls. camera dom-node)
-                 enableDamping (oset! "enableDamping" enableDamping)
-                 autoRotate    (oset! "autoRotate" autoRotate)
-                 zoomSpeed     (oset! "zoomSpeed" zoomSpeed)
-                 minDistance   (oset! "minDistance" minDistance)
-                 maxDistance   (oset! "maxDistance" maxDistance)
-                 minPolarAngle (oset! "minPolarAngle" minPolarAngle)
-                 maxPolarAngle (oset! "maxPolarAngle" maxPolarAngle))
+                 enable-damping  (oset! "enableDamping" enable-damping)
+                 auto-rotate     (oset! "autoRotate" auto-rotate)
+                 zoom-speed      (oset! "zoomSpeed" zoom-speed)
+                 min-distance    (oset! "minDistance" min-distance)
+                 max-distance    (oset! "maxDistance" max-distance)
+                 min-polar-angle (oset! "minPolarAngle" min-polar-angle)
+                 max-polar-angle (oset! "maxPolarAngle" max-polar-angle))
            (.addEventListener "end" #(re-posh/dispatch [:three.swig.events/end (+ id-offset (.-id camera))]))
            (.addEventListener "start" #(re-posh/dispatch [:three.swig.events/start (+ id-offset (.-id camera))]))
            (.addEventListener "change" #(re-posh/dispatch [:three.swig.events/change (+ id-offset (.-id camera))])))))
@@ -522,6 +522,7 @@
            :three/obj box
            :swig/children elems)))
 
+
 (defmethod construct-scene :swig.type/three.torus-knot
   [{:keys [three.shape/radius
            three.shape/tube
@@ -534,19 +535,19 @@
            three.object/scale
            three.object/material
            swig/children]
-    :or {radius 1.0
-         tube 0.4
-         tubular-segments 64
-         radial-segments 8
-         p 2
-         q 3
-         position [0 0 0]
-         rotation [0 0 0]
-         scale [1 1 1]}
-    :as props}]
+    :or   {radius           1.0
+           tube             0.4
+           tubular-segments 64
+           radial-segments  8
+           p                2
+           q                3
+           position         [0 0 0]
+           rotation         [0 0 0]
+           scale            [1 1 1]}
+    :as   props}]
   (let [elems (map construct-scene children)
-        geo (three/Mesh. (three/TorusKnotGeometry. radius tube tubular-segments radial-segments p q)
-                         (three/MeshBasicGeometry. (clj->js material)))]
+        geo   (three/Mesh. (three/TorusKnotGeometry. radius tube tubular-segments radial-segments p q)
+                           (three/MeshBasicGeometry. (clj->js material)))]
     (helpers/set-position! geo position)
     (helpers/set-rotation! geo rotation)
     (helpers/set-scale! geo scale)

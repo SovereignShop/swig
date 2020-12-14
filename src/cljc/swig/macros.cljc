@@ -92,3 +92,7 @@
   [query-name pattern]
   `(re-posh.core/reg-pull-many-sub ~query-name (quote ~pattern)))
 
+(defmacro set-attr! [db entity attr value]
+  `(let [ent# (datascript.core/entity ~db ~entity)]
+     (when-let [obj# (:three/obj ent#)]
+       (oops.core/oset! obj# ~attr ~value))))

@@ -7,13 +7,13 @@
 
 (defmethod methods/dispatch :swig.type/tab
   ([{:keys [:db/id] :as tab}]
-   (println "TAB:" tab)
    (let [child        (first @(re-posh/subscribe
                                [:swig.subs.element/get-children
                                 id
                                 [:swig.type/split
                                  :swig.type/frame
-                                 :swig.type/view]]))
+                                 :swig.type/view
+                                 :skyhook.type/editor]]))
          ops          (:swig.tab/ops tab)
          container-id (str "tab-" id)]
      (->> [re/h-box
@@ -35,5 +35,6 @@
                 (methods/dispatch ops)))
             (when child
               (methods/dispatch child))
-            (methods/wrap (dissoc tab :swig.tab/fullscreen :swig.ref/parent))]]
+            (when (:swig/ident tab)
+              (methods/wrap (dissoc tab :swig.tab/fullscreen :swig.ref/parent)))]]
           (capability-container tab)))))
