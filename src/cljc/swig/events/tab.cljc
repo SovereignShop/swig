@@ -13,7 +13,7 @@
         tab-id (:db/id tab)
         main-view  (d/entity db root-view)
         active-tab (:db/id (:swig.view/active-tab main-view))]
-    (into (event-utils/update-active-tab db tab-id)
+    (into [] #_(event-utils/update-active-tab db tab-id)
           [{:db/id                    tab-id
             :swig.ref/parent          root-view
             :swig.ref/previous-parent (:db/id (:swig.ref/parent tab))

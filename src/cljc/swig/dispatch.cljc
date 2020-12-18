@@ -8,7 +8,7 @@
 
 (defmethod dispatch :default
   ([props]
-   [:div (str "No method found for props:" props)]))
+   [:div (str "No method found for props:" (into {} props))]))
 
 (defmulti wrap (fn
                  ([props] (:swig/ident props))

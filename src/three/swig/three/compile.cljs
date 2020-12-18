@@ -760,6 +760,7 @@
 
 (defn- to-tree [[type props children]]
   (assoc props
+         :swig.source/coords ((juxt :file :line :column :end-line :end-column) props)
          :swig/type type
          :swig/children (map to-tree children)))
 
