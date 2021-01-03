@@ -4,6 +4,27 @@
        :cljs [[cljs.core.match :refer-macros [match]]
               [re-posh.core :as re-posh]])))
 
+(defn disect-test-expr [expr]
+  (if (list? expr)
+    (let [evals
+          (for [e expr
+                :when (list? e)]
+            e)]
+      )
+    expr))
+
+(defmacro dcond [& exprs]
+  (let [new-exprs (apply concat
+                         (for [[test-expr cons-expr] (partition 2 exprs)]
+                           `(~test-expr (do
+                                          (let [x# (swap! skyhook.interpreter/cnt inc)
+                                                ret# ~cons-expr]
+                                            (println (str x# ":" (quote ~test-expr) ":\n") ret#)
+                                            ret#)))))]
+    `(do
+       (reset! skyhook.interpreter/cnt 0)
+       (cond ~@new-exprs))))
+
 (defmacro match2
   {:style/indent [:defn]}
   [vars & clauses]

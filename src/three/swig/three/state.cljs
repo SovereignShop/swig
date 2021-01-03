@@ -7,7 +7,29 @@
    [swig.three.compile :as three-compile]
    [swig.macros :refer-macros [set-attr!]]
    [cljs.core.async :refer [go]]
+   [oops.core :refer [oset!]]
    [datascript.db :as db :refer [datom-added]]))
+
+(defn update-widgets! [db v]
+  (let [{:keys [form-id]} (meta v)
+        form (d/entity db form-id)]
+    (when-let [obj (:codemirror/widget form)]
+      (oset! obj "textContent" (str v)))))
+
+(def widgets (atom #{}))
+
+(defn update-widget! [db v]
+  (let [m      (meta v)
+        form   (d/entity db (:form-id m))
+        editor (:form/editor form)
+        cm     (:editor/editor-node editor)
+        widget (:widget m)]
+    (if-let [w (@widgets widget)]
+          (oset! w "textContent" (str v))
+          (when widget
+            (oset! widget "textContent" (str v))
+            (.addLineWidget cm (:line m) widget)
+            (swap! widgets conj widget)))))
 
 (defn update-three! [db f ^int e v]
   (let [ent (d/entity db e)]

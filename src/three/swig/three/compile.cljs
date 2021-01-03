@@ -49,9 +49,9 @@
                  max-distance    (oset! "maxDistance" max-distance)
                  min-polar-angle (oset! "minPolarAngle" min-polar-angle)
                  max-polar-angle (oset! "maxPolarAngle" max-polar-angle))
-           (.addEventListener "end" #(re-posh/dispatch [:three.swig.events/end (+ id-offset (.-id camera))]))
-           (.addEventListener "start" #(re-posh/dispatch [:three.swig.events/start (+ id-offset (.-id camera))]))
-           (.addEventListener "change" #(re-posh/dispatch [:three.swig.events/change (+ id-offset (.-id camera))])))))
+           #_(.addEventListener "end" #(re-posh/dispatch [:three.swig.events/end (+ id-offset (.-id camera))]))
+           #_(.addEventListener "start" #(re-posh/dispatch [:three.swig.events/start (+ id-offset (.-id camera))]))
+           #_(.addEventListener "change" #(re-posh/dispatch [:three.swig.events/change (+ id-offset (.-id camera))])))))
 
 #_(defn construct-event-handlers [obj id handlers]
   (for [{:keys [swig/type three.events/name]} handlers]
@@ -153,6 +153,7 @@
            :swig/children elems)))
 
 
+
 (defmethod construct-scene :swig.type/three.object
   [{:keys [three.object/position
            three.object/rotation
@@ -171,6 +172,9 @@
       (.add object obj))
     (assoc props
            :three/obj object
+           #_:three/widgets #_(concat
+                           (when-let [frame-id (-> position meta :frame-id)]
+                             [{:db/id frame-id}]))
            :swig/children elems)))
 
 
@@ -759,10 +763,14 @@
 
 
 (defn- to-tree [[type props children]]
-  (assoc props
-         :swig.source/coords ((juxt :file :line :column :end-line :end-column) props)
-         :swig/type type
-         :swig/children (map to-tree children)))
+  (let [m         (meta props)
+        form-id   (:form-id m)
+        editor-id (:editor-id m)]
+    (cond-> (assoc props
+                   :swig/type type
+                   :swig/children (map to-tree children))
+      form-id   (assoc :db/id form-id)
+      editor-id (assoc :boject/editor editor-id))))
 
 
 (defn entid [entity-name]
