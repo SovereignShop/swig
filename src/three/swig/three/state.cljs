@@ -7,6 +7,7 @@
    [swig.three.compile :as three-compile]
    [swig.macros :refer-macros [set-attr!]]
    [cljs.core.async :refer [go]]
+   [skyhook.interpreter :as interpreter]
    [oops.core :refer [oset!]]
    [datascript.db :as db :refer [datom-added]]))
 
@@ -20,30 +21,37 @@
 
 (defn update-widget! [db v]
   (let [m      (meta v)
-        form   (d/entity db (:form-id m))
-        editor (:form/editor form)
-        cm     (:editor/editor-node editor)
-        widget (:widget m)]
-    (if-let [w (@widgets widget)]
-          (oset! w "textContent" (str v))
-          (when widget
-            (oset! widget "textContent" (str v))
-            (.addLineWidget cm (:line m) widget)
-            (swap! widgets conj widget)))))
+        form   (d/entity db (:form-id m))]
+    (when-let [widget (:widget/element form)]
+      (oset! widget "innerHTML" (str v)))))
 
 (defn update-three! [db f ^int e v]
   (let [ent (d/entity db e)]
     (when-let [obj (:three/obj ent)]
+      (update-widget! db v)
       (f obj v))))
 
 (defn create-scene! [db ^db/Datom d]
+  (println "Schene ID:" (.-e d) (d/pull db '[:swig/ident] (.-e d)))
   (re-posh/dispatch [:swig.events.core/initialize
                      (-> db
-                         (d/entity (.-e d))
+                         (d/pull '[*] (.-e d))
                          (parser/facts->hiccup db)
                          (three-compile/create-scene)
                          (three-compile/to-hiccup)
                          (three-compile/to-facts))]))
+
+
+#_(defn create-scene! [db ^db/Datom d]
+  (let [editor (d/entity (.-e d))
+        form  (:editor/root-form editor)
+        hiccup (interpreter/db->form form)]
+    (re-posh/dispatch [:swig.events.core/initialize
+                       (-> hiccup
+                           (three-compile/create-scene)
+                           (three-compile/to-hiccup)
+                           (three-compile/to-facts))])))
+
 
 (defn create-type! [db ^db/Datom d]
   (when-let [obj (:three/obj (:swig.ref/parent (d/entity db (.-e d))))]))

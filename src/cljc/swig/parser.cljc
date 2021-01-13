@@ -86,22 +86,24 @@
    (hiccup->facts nil hiccup))
   ([parent hiccup]
    (let [id-gen (atom -1)
-         valid? true #_(m/validate :swig.spec/view hiccup {:registry spec/registry})]
+         valid? true #_ (m/validate :swig.spec/view hiccup {:registry spec/registry})]
      (if (not valid?)
        (throw (ex-info "Schema Validation Failed"
                        (m/explain :swig.spec/view hiccup {:registry spec/registry})))
        (let [facts ((fn run [parent idx [swig-type props children]]
                       (lazy-seq
                        (let [id (or (:db/id props) (swap! id-gen dec))]
-                         (conj (vec (mapcat (partial run id)(range) children))
-                               (compile-hiccup-impl
-                                (cond-> (assoc props
-                                               :db/id id
-                                               :swig/index idx
-                                               :swig/type swig-type)
-                                  parent (assoc :swig.ref/parent parent))
-                                id-gen
-                                parent)))))
+                         (cond-> (conj (vec (mapcat (partial run id) (range) children))
+                                       (compile-hiccup-impl
+                                        (cond-> (assoc props
+                                                       :db/id id
+                                                       :swig/index idx
+                                                       :swig/type swig-type)
+                                          (meta props) (assoc :swig/meta (meta props))
+                                          parent       (assoc :swig.ref/parent parent))
+                                        id-gen
+                                        parent))
+                           (:object/form props) (conj [:db/add (:object/form props) :three/object id])))))
                     parent 0 hiccup)]
          facts)))))
 
@@ -116,7 +118,9 @@
                           [?id :swig.ref/parent ?parent]]
                         facts
                         parent-id)]
-     [(:swig/type parent) (into {} (remove (comp internal-keys key)) parent)
+     [(:swig/type parent) (into (with-meta {} (:swig/meta parent))
+                                (remove (comp internal-keys key))
+                                parent)
       (mapv #(facts->hiccup % facts)
             (sort-by :swig/index children))])))
 

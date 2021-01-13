@@ -766,20 +766,21 @@
   (let [m         (meta props)
         form-id   (:form-id m)
         editor-id (:editor-id m)]
+    (println "PROPS TYPE: " form-id editor-id)
     (cond-> (assoc props
                    :swig/type type
                    :swig/children (map to-tree children))
-      form-id   (assoc :db/id form-id)
-      editor-id (assoc :boject/editor editor-id))))
+      form-id   (assoc :object/form form-id)
+      editor-id (assoc :object/editor editor-id))))
 
 
 (defn entid [entity-name]
   (-> entity-name str hash-string Math/abs))
 
 
-(defn to-hiccup [{:keys [swig/type swig/children three/obj] :as props}]
+(defn to-hiccup [{:keys [swig/type swig/children] :as props}]
   [type
-   (dissoc props :swig/children)
+   (dissoc props :swig/children :swig/ident)
    (mapv to-hiccup children)])
 
 
