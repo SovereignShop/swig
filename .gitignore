@@ -1,4 +1,6 @@
 .clj-kondo/.cache
+.cpcache/
+.nrepl-port
 .DS_Store
 .idea
 *.log
