@@ -26,7 +26,7 @@
                  mvxcvi/puget              {:mvn/version "1.0.2"}
                  cider/orchard             {:mvn/version "0.3.1"}
                  cljs-tooling/cljs-tooling {:mvn/version "0.3.0"}}
-   :extra-paths ["build" "src/jsm"]
+   :extra-paths ["build" "src/jsm" "test"]
    :main-opts   ["-m" "nrepl.cmdline" "--middleware"
                  "[cider.nrepl/cider-middleware,cider.piggieback/wrap-cljs-repl]"]}
 
