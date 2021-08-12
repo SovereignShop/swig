@@ -33,12 +33,23 @@
                         (partition 2 clauses))]
     `(cljs.core.match/match ~vars ~@clauses)))
 
+(defmacro if-cljs [env consequent alternate]
+  (if (:ns env)
+    consequent
+    alternate))
+
+(defmacro when-cljs [env consequent]
+  (when (:ns env)
+    consequent))
+
 (defmacro def-event-ds
   [k args & body]
   (let [sym (symbol (name k))]
-    `(do (defn ~sym ~args ~@body)
-         (re-posh.core/reg-event-ds ~k (fn [db# params#]
-                                         (apply ~sym db# (next params#)))))))
+    (if-cljs &env
+      `(do (defn ~sym ~args ~@body)
+           (re-posh.core/reg-event-ds ~k (fn [db# params#]
+                                           (apply ~sym db# (next params#)))))
+      `(defn ~sym ~args ~@body))))
 
 (defn compile-query [query]
   (match query
@@ -64,54 +75,64 @@
                                   (str (gensym (name query-name))))]
      (match parsed-query
             [:none nil find-expr]
-            `(do (def ~query-name-sym (quote ~query))
-                 (defn ~handler-fn-name [_# variables#]
-                   {:type      :query
-                    :query     (quote ~query)
-                    :variables (next variables#)})
-                 (re-posh.core/reg-sub ~query-name ~handler-fn-name))
+            (if-cljs &env
+              `(do (def ~query-name-sym (quote ~query))
+                   (defn ~handler-fn-name [_# variables#]
+                     {:type      :query
+                      :query     (quote ~query)
+                      :variables (next variables#)})
+                   (re-posh.core/reg-sub ~query-name ~handler-fn-name))
+              `(def ~query-name-sym (quote ~query)))
             [:pull-many pull-pattern find-expr]
-            `(do (def ~query-name-sym (quote ~query))
-                 (re-posh.core/reg-query-sub ~find-ids-query (quote ~find-expr))
-                 (defn ~signal-fn-name  [params#]
-                   (re-posh.core/subscribe (into [~find-ids-query] (next params#))) )
-                 (defn ~handler-fn-name [ids# _#]
-                   {:type    :pull-many
-                    :pattern (quote ~pull-pattern)
-                    :ids     (flatten ids#)})
-                 (re-posh.core/reg-sub ~query-name ~signal-fn-name ~handler-fn-name))
+            (if-cljs &env
+              `(do (def ~query-name-sym (quote ~query))
+                   (re-posh.core/reg-query-sub ~find-ids-query (quote ~find-expr))
+                   (defn ~signal-fn-name  [params#]
+                     (re-posh.core/subscribe (into [~find-ids-query] (next params#))) )
+                   (defn ~handler-fn-name [ids# _#]
+                     {:type    :pull-many
+                      :pattern (quote ~pull-pattern)
+                      :ids     (flatten ids#)})
+                   (re-posh.core/reg-sub ~query-name ~signal-fn-name ~handler-fn-name))
+              `(def ~query-name-sym (quote ~query)))
 
             [:pull pull-pattern find-expr]
-            `(do (def ~query-name-sym (quote ~query))
-                 (re-posh.core/reg-query-sub ~find-ids-query (quote ~find-expr))
-                 (defn ~signal-fn-name  [params#]
-                   (re-posh.core/subscribe (into [~find-ids-query] (next params#))) )
-                 (defn ~handler-fn-name [ids# _#]
-                   {:type    :pull
-                    :pattern (quote ~pull-pattern)
-                    :id      ids#})
-                 (re-posh.core/reg-sub ~query-name ~signal-fn-name ~handler-fn-name))
+            (if-cljs &env
+              `(do (def ~query-name-sym (quote ~query))
+                   (re-posh.core/reg-query-sub ~find-ids-query (quote ~find-expr))
+                   (defn ~signal-fn-name  [params#]
+                     (re-posh.core/subscribe (into [~find-ids-query] (next params#))) )
+                   (defn ~handler-fn-name [ids# _#]
+                     {:type    :pull
+                      :pattern (quote ~pull-pattern)
+                      :id      ids#})
+                   (re-posh.core/reg-sub ~query-name ~signal-fn-name ~handler-fn-name))
+              `(def ~query-name-sym (quote ~query))               )
 
             [:pull-with op pull-pattern find-expr]
-            `(do (def ~query-name-sym (quote ~query))
-                 (re-posh.core/reg-query-sub ~find-ids-query (quote ~find-expr))
-                 (defn ~signal-fn-name  [params#]
-                   (re-posh.core/subscribe (into [~find-ids-query] (next params#))))
-                 (defn ~handler-fn-name [ids# _#]
-                   {:type    :pull-many
-                    :pattern (quote ~pull-pattern)
-                    :ids     (~op ids#)})
-                 (re-posh.core/reg-sub ~query-name ~signal-fn-name ~handler-fn-name))))))
+            (if-cljs &env
+              `(do (def ~query-name-sym (quote ~query))
+                   (re-posh.core/reg-query-sub ~find-ids-query (quote ~find-expr))
+                   (defn ~signal-fn-name  [params#]
+                     (re-posh.core/subscribe (into [~find-ids-query] (next params#))))
+                   (defn ~handler-fn-name [ids# _#]
+                     {:type    :pull-many
+                      :pattern (quote ~pull-pattern)
+                      :ids     (~op ids#)})
+                   (re-posh.core/reg-sub ~query-name ~signal-fn-name ~handler-fn-name))
+              '(def ~query-name-sym (quote ~query)))))))
 
 (defmacro def-pull-sub
   ^{:style/indent [:defn]}
   [query-name pattern]
-  `(re-posh.core/reg-pull-sub ~query-name (quote ~pattern)))
+  (when-cljs &env
+    `(re-posh.core/reg-pull-sub ~query-name (quote ~pattern))))
 
 (defmacro def-pull-many-sub
   ^{:style/indent [:defn]}
   [query-name pattern]
-  `(re-posh.core/reg-pull-many-sub ~query-name (quote ~pattern)))
+  (when-cljs &env
+    `(re-posh.core/reg-pull-many-sub ~query-name (quote ~pattern))))
 
 (defmacro set-attr! [db entity attr value]
   `(let [ent# (datascript.core/entity ~db ~entity)]
