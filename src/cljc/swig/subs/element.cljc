@@ -12,9 +12,9 @@
 
 (m/def-sub :swig.subs.element/get-parent
   [:find ?parent-id .
-    :in $ ?id
-    :where
-    [?id :swig.ref/parent ?parent-id]])
+   :in $ ?id
+   :where
+   [?parent-id :swig.ref/child ?id]])
 
 (m/def-sub ::get-handler
   [:find ?handler .
@@ -41,5 +41,5 @@
                           :swig/type])
    :in $ ?id [?type ...]
    :where
-   [?child-id :swig.ref/parent ?id]
+   [?id :swig.ref/child ?child-id]
    [?child-id :swig/type ?type]])

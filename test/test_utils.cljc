@@ -13,6 +13,15 @@
                                (not= (:db/valueType m) :db.type/ref) (dissoc m :db/valueType))]))
         schema))
 
+(defn simple-tree
+  [:swig.type/view
+   {:swig/ident :swig/root-view
+    :swig.view/active-tab [:swig/ident :tabs/a]}
+   [[:swig.type/tab
+     {:swig.tab/label
+      {:swig/type :swig.type/cell
+       :swig.cell/element "A"}}]]])
+
 (def test-tree
   [:swig.type/view
    {:swig/ident           :swig/root-view,

@@ -91,19 +91,20 @@
        (throw (ex-info "Schema Validation Failed"
                        (m/explain :swig.spec/view hiccup {:registry spec/registry})))
        (let [facts ((fn run [parent idx [swig-type props children]]
-                      (lazy-seq
-                       (let [id (or (:db/id props) (swap! id-gen dec))]
-                         (cond-> (conj (vec (mapcat (partial run id) (range) children))
-                                       (compile-hiccup-impl
-                                        (cond-> (assoc props
-                                                       :db/id id
-                                                       :swig/index idx
-                                                       :swig/type swig-type)
-                                          (meta props) (assoc :swig/meta (meta props))
-                                          parent       (assoc :swig.ref/parent parent))
-                                        id-gen
-                                        parent))
-                           (:object/form props) (conj [:db/add (:object/form props) :three/object id])))))
+                      (let [id (or (:db/id props) (swap! id-gen dec))
+                            c (mapv (partial run id) (range) children)]
+                        (cond-> (conj (vec (apply concat c))
+                                      (compile-hiccup-impl
+                                       (cond-> (assoc props
+                                                      :db/id id
+                                                      :swig/index idx
+                                                      :swig.ref/child (mapv (comp :db/id peek) c)
+                                                      :swig/type swig-type)
+                                         (meta props) (assoc :swig/meta (meta props))
+                                         parent       (assoc :swig.ref/parent parent))
+                                       id-gen
+                                       parent))
+                          (:object/form props) (conj [:db/add (:object/form props) :three/object id]))))
                     parent 0 hiccup)]
          facts)))))
 

@@ -14,11 +14,13 @@
         main-view  (d/entity db root-view)
         active-tab (:db/id (:swig.view/active-tab main-view))]
     (into [] #_(event-utils/update-active-tab db tab-id)
-          [{:db/id                    tab-id
+          [[:db/retract (:db/id (:swig.ref/parent tab)) :swig.ref/child tab-id]
+           {:db/id                    tab-id
             :swig.ref/parent          root-view
             :swig.ref/previous-parent (:db/id (:swig.ref/parent tab))
             :swig.tab/fullscreen      true}
            {:db/id                         root-view
+            :swig.ref/child                tab-id
             :swig.view/active-tab          tab-id
             :swig.view/previous-active-tab active-tab}])))
 
@@ -31,9 +33,11 @@
     [[:db.fn/retractAttribute tab-id    :swig.tab/fullscreen]
      [:db.fn/retractAttribute tab-id    :swig.ref/previous-parent]
      [:db.fn/retractAttribute root-view :swig.view/previous-active-tab]
+     [:db/retract root-view :swig.ref/child tab-id]
      {:db/id           tab-id
       :swig.ref/parent previous-parent-id}
      {:db/id                previous-parent-id
+      :swig.ref/child       tab-id
       :swig.view/active-tab tab-id}
      {:db/id                root-view
       :swig.view/active-tab previous-active-tab}]))
@@ -55,7 +59,7 @@
                :in $ ?tab-id
                :where
                [?tab-id :swig/type :swig.type/tab]
-               [?tab-id :swig.ref/parent ?view-id]
+               [?view-id :swig.ref/child ?tab-id]
                [?view-id :swig/type :swig.type/view]]
              db
              tab-id)
@@ -70,19 +74,27 @@
         (d/q '[:find [?tab-id ...]
                :in $ ?view-id
                :where
-               [?tab-id :swig.ref/parent ?view-id]
+               [?view-id :swig.ref/child ?tab-id]
                [?tab-id :swig/type :swig.type/tab]
                [?view-id :swig/type :swig.type/view]]
              db
              view-id)
-        view (d/entity db view-id)]
-    (concat [{:db/id                    -2
+        view (d/entity db view-id)
+        new-split-id -2
+        new-view-id -1]
+    (println "view ids:" [view-id new-view-id])
+    (println "tab ids:" tab-ids)
+    (concat [{:db/id view-parent-id
+              :swig.ref/child -2}
+             #_[:db/retract view-parent-id :swig.ref/child view-id]
+             {:db/id                    new-split-id
+              :swig.ref/child           [view-id new-view-id]
               :swig/index               (:swig/index view)
               :swig/type                :swig.type/split
               :swig.ref/parent          view-parent-id
               :swig.split/ops           {:swig/type :swig.type/operations
                                          :db/id -4
-                                         :swig.ref/parent -2
+                                         :swig.ref/parent new-split-id
                                          :swig.operations/ops
                                          [{:swig/type :swig.operation/re-orient
                                            :swig.ref/parent -4}
@@ -90,24 +102,33 @@
                                            :swig.ref/parent -4}]}
               :swig.split/orientation   orientation
               :swig.split/split-percent 50.1}
-             {:db/id                -1
+             {:db/id new-view-id
+              :swig.ref/child new-split-id}
+             {:db/id                new-view-id
               :swig/index           0
               :swig/type            :swig.type/view
-              :swig.ref/parent      -2
+              :swig.ref/parent      new-split-id
+              :swig.ref/child        (for [id    tab-ids
+                                           :when (not= id tab-id)]
+                                       id)
               :swig.view/ops        {:swig/type :swig.type/operations
                                      :db/id -3
-                                     :swig.ref/parent -1
+                                     :swig.ref/parent new-view-id
                                      :swig.operations/ops
                                      [{:swig/type :swig.operation/divide-vertical
                                        :swig.ref/parent -3}
                                       {:swig/type :swig.operation/divide-horizontal
                                        :swig.ref/parent -3}]}
               :swig.view/active-tab (event-utils/next-tab-id tab-id tab-ids)}
-             [:db/add view-id :swig.ref/parent -2]
+             [:db/add view-id :swig.ref/parent new-split-id]
              [:db/add view-id :swig/index 1]]
-            (for [id    tab-ids
-                  :when (not= id tab-id)]
-              [:db/add id :swig.ref/parent -1]))))
+            (for [tab-id tab-ids
+                   :when (= id tab-id)]
+                [:db/retract view-id :swig.ref/child tab-id])
+            #_(for [id    tab-ids
+                    :when (not= id tab-id)]
+                [:db/add -1 :swig.ref/child id]
+                #_[:db/add id :swig.ref/parent -1]))))
 
 (def-event-ds :swig.events.tab/delete-tab
   [db tab-id]

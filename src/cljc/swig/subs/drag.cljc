@@ -12,8 +12,8 @@
   [:find ?frame-id .
    :in $ ?view-id
    :where
-   [?view-id :swig.ref/parent ?frame-id]
-   [?frame-id :swig.ref/parent ?frame-parent-id]
+   [?frame-id :swig.ref/child ?view-id]
+   [?frame-parent-id :swig.ref/child ?frame-id]
    [?frame-parent-id :swig.container/capabilities :swig.capability/drag]])
 
 (def-sub :swig.subs.drag/drag-offsets

@@ -10,6 +10,5 @@
    :swig.tab/ops
    :swig/index
    :swig/type
-   :swig.ref/parent
    :swig/ident
    :db/id])

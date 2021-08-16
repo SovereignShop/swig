@@ -19,7 +19,7 @@
 
 (m/def-sub :swig.subs.operations/op-get-frame
   [:find ?frame-id .
-    :in $ ?op-id
-    :where
-    [?op-id :swig.ref/parent ?ops-id]
-    [?frame-id :swig.frame/ops ?ops-id]])
+   :in $ ?op-id
+   :where
+   [?ops-id :swig.ref/child ?op-id]
+   [?frame-id :swig.frame/ops ?ops-id]])

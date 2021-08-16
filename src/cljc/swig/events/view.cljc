@@ -12,7 +12,7 @@
         (d/q '[:find [?view-id ...]
                :in $ ?split-id
                :where
-               [?view-id :swig.ref/parent ?split-id]
+               [?split-id :swig.ref/child ?view-id]
                [?view-id :swig/type :swig.type/view]
                [?split-id :swig/type :swig.type/split]]
              db
@@ -21,16 +21,18 @@
         (d/q '[:find [?tab-id ...]
                :in $ [?view-id ...]
                :where
-               [?tab-id :swig.ref/parent ?view-id]
+               [?view-id :swig.ref/child ?tab-id]
                [?tab-id :swig/type :swig.type/tab]]
              db
              view-ids)
         parent  (:swig.ref/parent (d/entity db split-id))
         view-id (second view-ids)]
     (concat [[:db/add view-id :swig.ref/parent (:db/id parent)]
+             [:db/add (:db/id parent) :swig.ref/child view-id]
              [:db/retractEntity split-id]]
             (for [id    view-ids
                   :when (not= view-id id)]
               [:db/retractEntity id])
             (for [tab-id tab-ids]
-              [:db/add tab-id :swig.ref/parent view-id]))))
+              [:db/add view-id :swig.ref/child tab-id]
+              #_[:db/add tab-id :swig.ref/parent view-id]))))
