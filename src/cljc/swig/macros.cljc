@@ -33,12 +33,12 @@
                         (partition 2 clauses))]
     `(cljs.core.match/match ~vars ~@clauses)))
 
-(defmacro if-cljs [env consequent alternate]
+(defn if-cljs [env consequent alternate]
   (if (:ns env)
     consequent
     alternate))
 
-(defmacro when-cljs [env consequent]
+(defn when-cljs [env consequent]
   (when (:ns env)
     consequent))
 
@@ -120,7 +120,7 @@
                       :pattern (quote ~pull-pattern)
                       :ids     (~op ids#)})
                    (re-posh.core/reg-sub ~query-name ~signal-fn-name ~handler-fn-name))
-              '(def ~query-name-sym (quote ~query)))))))
+              `(def ~query-name-sym (quote ~query)))))))
 
 (defmacro def-pull-sub
   ^{:style/indent [:defn]}
