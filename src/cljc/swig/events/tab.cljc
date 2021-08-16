@@ -120,3 +120,11 @@
   (let [tab (d/entity db tab-id)]
     (conj (event-utils/update-active-tab db tab)
           [:db.fn/retractAttribute tab-id :swig.ref/parent])))
+
+(def-event-ds :swig.events.tab/duplicate
+  [db tab-id]
+  (let [tab (d/entity db tab-id)
+        children (event-utils/get-children db tab-id)]
+    (into [(dissoc (into {} tab) :db/id)]
+          (map #(vector % :swig.ref/parent tab-id)
+               children))))

@@ -34,3 +34,9 @@
       (let [new-active-tab (next-tab-id id tab-ids)]
         [[:db/add (:db/id view) :swig.view/active-tab new-active-tab]])
       [])))
+
+(defn get-children [db id]
+  (d/q '[:find (pull ?child-id [*])
+         :in $ ?id
+         :where
+         [?child-id :swig.ref/parent ?id]]))

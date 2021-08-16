@@ -82,3 +82,13 @@
         (is (empty? (clojure.set/difference
                      (into #{} (map eav-added) join-after)
                      (into #{} (map eav-added) divide-before))))))))
+
+(deftest test-tabs-duplicate-and-divide
+  (let [db
+        (d/db-with
+         (d/empty-db (to-ds-schema swig/full-schema))
+         (parser/hiccup->facts test-tree))]
+    (doseq [tab-id (query-tabs db)]
+      (let [children '...
+            duplicate-tab (tab '...)]
+        ))))
