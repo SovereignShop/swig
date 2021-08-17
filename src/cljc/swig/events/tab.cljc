@@ -53,7 +53,7 @@
 
 (def-event-ds :swig.events.tab/divide-tab
   [db id orientation]
-  (let [tab (event-utils/find-ancestor (d/entity db id) :swig.type/tab)
+  (let [tab (event-utils/find-operation-entity db id)
         tab-id (:db/id tab)
         view-id
         (d/q '[:find ?view-id .

@@ -6,7 +6,8 @@
 
 (m/def-event-ds :swig.events.view/join-views
   [db id]
-  (let [split (event-utils/find-ancestor (d/entity db id) :swig.type/split)
+  (let [tab (event-utils/find-operation-entity db id)
+        split (event-utils/find-ancestor tab :swig.type/split)
         split-id (:db/id split)
         view-ids
         (d/q '[:find [?view-id ...]
@@ -27,6 +28,7 @@
              view-ids)
         parent  (event-utils/get-parent (d/entity db split-id))
         view-id (second view-ids)]
+    (println "split id:" split-id (:swig/type split))
     (concat [[:db/add (:db/id parent) :swig.ref/child view-id]
              [:db/retractEntity split-id]]
             (for [id    view-ids
