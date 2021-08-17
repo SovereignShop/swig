@@ -25,14 +25,12 @@
                [?tab-id :swig/type :swig.type/tab]]
              db
              view-ids)
-        parent  (:swig.ref/parent (d/entity db split-id))
+        parent  (event-utils/get-parent (d/entity db split-id))
         view-id (second view-ids)]
-    (concat [[:db/add view-id :swig.ref/parent (:db/id parent)]
-             [:db/add (:db/id parent) :swig.ref/child view-id]
+    (concat [[:db/add (:db/id parent) :swig.ref/child view-id]
              [:db/retractEntity split-id]]
             (for [id    view-ids
                   :when (not= view-id id)]
               [:db/retractEntity id])
             (for [tab-id tab-ids]
-              [:db/add view-id :swig.ref/child tab-id]
-              #_[:db/add tab-id :swig.ref/parent view-id]))))
+              [:db/add view-id :swig.ref/child tab-id]))))

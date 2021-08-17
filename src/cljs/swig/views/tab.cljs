@@ -14,8 +14,9 @@
                                  :swig.type/frame
                                  :swig.type/view
                                  :skyhook.type/editor]]))
-         ops          (:swig.tab/ops tab)
+         ops          (:swig.element/ops tab)
          container-id (str "tab-" id)]
+     (println "operations:" (map :db/id ops))
      (->> [re/h-box
            :attr  {:id (str "swig-" container-id)}
            :style {:flex "1 1 0%"}
@@ -36,5 +37,5 @@
             (when child
               (methods/dispatch child))
             (when (:swig/ident tab)
-              (methods/wrap (dissoc tab :swig.tab/fullscreen :swig.ref/parent)))]]
+              (methods/wrap (dissoc tab :swig.tab/fullscreen)))]]
           (capability-container tab)))))

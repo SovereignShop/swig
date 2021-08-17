@@ -30,7 +30,7 @@
     [:= :swig.type/tab]
     [:map
      [:swig.tab/fullscreen {:optional true} :boolean]
-     [:swig.tab/ops {:optional true} any?]]
+     [:swig.element/ops {:optional true} any?]]
     [:vector [:or [:ref ::frame] [:ref ::view] [:ref ::split]]]]
 
    ::view-ops
@@ -42,7 +42,7 @@
     [:map
      [:swig.view/active-tab {:optional true} ::ident]
      [:swig.view/previous-active-tab {:optional true} ::ident]
-     [:swig.view/ops {:optional true} ::view-ops]]
+     [:swig.element/ops {:optional true} ::view-ops]]
     [:vector [:or [:ref ::window] [:ref ::frame] [:ref ::tab] [:ref ::view] [:ref ::split]]]]
 
    ::split-ops
@@ -52,7 +52,7 @@
    [:tuple
     [:= :swig.type/split]
     [:map
-     [:swig.split/ops {:optional true} [:ref ::split-ops]]
+     [:swig.element/ops {:optional true} [:ref ::split-ops]]
      [:swig.split/orientation {:optional false} [:or [:= :horizontal] [:= :vertical]]]
      [:swig.split/split-percent {:optional false} :int]]
     [:vector [:or [:ref ::view] [:ref ::tab] [:ref ::split]]]]

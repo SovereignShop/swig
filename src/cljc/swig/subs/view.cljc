@@ -10,7 +10,7 @@
                         :swig.tab/handler
                         :swig.tab/label
                         :swig.tab/order
-                        :swig.tab/ops
+                        :swig.element/ops
                         :swig/type
                         :swig/ident
                         :db/id]) .
@@ -26,7 +26,7 @@
                          [:swig/type
                           :swig.cell/element]}
                         :swig.tab/order
-                        {:swig.tab/ops
+                        {:swig.element/ops
                          [:swig/type
                           {:swig.operations/ops
                            [:swig/type]}]}
@@ -41,7 +41,7 @@
    [?tab-id :swig/type :swig.type/tab]])
 
 (m/def-pull-sub :swig.subs.view/get-view-ops
-  [:swig.view/ops
+  [:swig.element/ops
    :swig.view/tab-type])
 
 (m/def-sub :swig.subs.view/get-view-ids

@@ -38,7 +38,7 @@
   (s/or :empty-element ::empty-element
         :element ::element))
 
-(def internal-keys #{:swig/index :swig.ref/parent :swig/type})
+(def internal-keys #{:swig/index :swig/type})
 
 (defmulti compile-hiccup-impl (fn [elem _ _] (:swig/type elem)))
 
@@ -49,20 +49,20 @@
 (defmethod compile-hiccup-impl :swig.type/tab
   [{id :db/id :as props} id-gen _]
   (cond-> props
-    (:swig.tab/ops props)
-    (update :swig.tab/ops compile-hiccup-impl id-gen id)))
+    (:swig.element/ops props)
+    (update :swig.element/ops compile-hiccup-impl id-gen id)))
 
 (defmethod compile-hiccup-impl :swig.type/view
   [{id :db/id :as props} id-gen _]
   (cond-> props
-    (:swig.view/ops props)
-    (update :swig.view/ops compile-hiccup-impl id-gen id)))
+    (:swig.element/ops props)
+    (update :swig.element/ops compile-hiccup-impl id-gen id)))
 
 (defmethod compile-hiccup-impl :swig.type/split
   [{id :db/id :as props} id-gen _]
   (cond-> props
-    (:swig.split/ops props)
-    (update :swig.split/ops compile-hiccup-impl id-gen id)))
+    (:swig.element/ops props)
+    (update :swig.element/ops compile-hiccup-impl id-gen id)))
 
 (defmethod compile-hiccup-impl :swig.type/frame
   [{id :db/id :as props} id-gen _]
@@ -73,13 +73,7 @@
 (defmethod compile-hiccup-impl :swig.type/operations
   [props id-gen parent]
   (let [id (swap! id-gen dec)]
-    (cond-> (assoc props
-                   :swig.ref/parent parent
-                   :db/id id)
-      (:swig.operations/ops props)
-      (update :swig.operations/ops
-              (fn [ops]
-                (map #(assoc % :swig.ref/parent id) ops))))))
+    (assoc props :db/id id)))
 
 (defn hiccup->facts
   ([hiccup]
@@ -100,8 +94,7 @@
                                                       :swig/index idx
                                                       :swig.ref/child (mapv (comp :db/id peek) c)
                                                       :swig/type swig-type)
-                                         (meta props) (assoc :swig/meta (meta props))
-                                         parent       (assoc :swig.ref/parent parent))
+                                         (meta props) (assoc :swig/meta (meta props)))
                                        id-gen
                                        parent))
                           (:object/form props) (conj [:db/add (:object/form props) :three/object id]))))
@@ -116,7 +109,7 @@
          children  (d/q '[:find [(pull ?id [*]) ...]
                           :in $ ?parent
                           :where
-                          [?id :swig.ref/parent ?parent]]
+                          [?parent :swig.ref/child ?id]]
                         facts
                         parent-id)]
      [(:swig/type parent) (into (with-meta {} (:swig/meta parent))

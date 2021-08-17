@@ -14,7 +14,7 @@
 (defmethod methods/dispatch :swig.type/view
   [props]
   (let [view-id       (:db/id props)
-        {view-ops :swig.view/ops view-type :swig.view/tab-type}
+        {view-ops :swig.element/ops view-type :swig.view/tab-type}
         @(re-posh/subscribe [:swig.subs.view/get-view-ops view-id])
         children      @(re-posh/subscribe [:swig.subs.element/get-children
                                            view-id

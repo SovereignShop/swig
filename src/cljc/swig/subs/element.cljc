@@ -30,7 +30,7 @@
 
 (m/def-sub :swig.subs.element/get-children
   [:find (pull ?child-id [:db/id
-                          {:swig.tab/ops
+                          {:swig.element/ops
                            [:swig/type
                             {:swig.operations/ops
                              [:swig/type]}]}

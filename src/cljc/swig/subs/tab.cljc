@@ -7,7 +7,7 @@
    :swig.tab/handler
    :swig.tab/label
    :swig.tab/order
-   :swig.tab/ops
+   :swig.element/ops
    :swig/index
    :swig/type
    :swig/ident

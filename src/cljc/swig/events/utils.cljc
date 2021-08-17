@@ -2,6 +2,24 @@
   (:require
    [datascript.core :as d]))
 
+(defn get-parent [entity]
+  (let [db (d/entity-db entity)
+        parent-id (d/q '[:find ?parent . :in $ ?child :where [?parent :swig.ref/child ?child]]
+                       db
+                       (:db/id entity))]
+    (println "parent id:" parent-id)
+    (d/entity db parent-id)))
+
+(defn find-operation-entity [db id]
+  (let [elem-id (d/q '[:find ?id .
+                       :in $ ?op-id
+                       :where
+                       [?op :swig.operations/ops ?op-id]
+                       [?id :swig.element/ops ?op]]
+                     db
+                     id)]
+    (d/entity db elem-id)))
+
 (defn find-ancestor [elem type]
   (let [elem-type (:swig/type elem)]
     (cond (= elem-type type) elem
@@ -9,10 +27,10 @@
                                              :clj (Exception. (str "Type not found: " type))))
           (nil? elem-type) (throw #?(:clj (Exception.  "nil type!")
                                      :cljs (js/Error. "nil type!")))
-          :else (recur (:swig.ref/parent elem) type))))
+          :else (recur (get-parent elem) type))))
 
 (defn ancestor-seq [elem]
-  (next (iterate :swig.ref/parent elem)))
+  (next (iterate get-parent elem)))
 
 (defn next-tab-id [tab-id tab-ids]
   (assert (> (count tab-ids) 1))
@@ -26,7 +44,7 @@
         (d/q '[:find  [?tab-id ...]
                :in $ ?view-id
                :where
-               [?tab-id :swig.ref/parent ?view-id]
+               [?view-id :swig.ref/child ?tab-id]
                [?tab-id :swig/type :swig.type/tab]]
              db
              (:db/id view))]
@@ -39,4 +57,4 @@
   (d/q '[:find (pull ?child-id [*])
          :in $ ?id
          :where
-         [?child-id :swig.ref/parent ?id]]))
+         [?id :swig.ref/child ?child-id]]))

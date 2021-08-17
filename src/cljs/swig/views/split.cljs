@@ -18,7 +18,7 @@
                                                 :swig.type/tab
                                                 :swig.type/split]]))
         split    @(re-posh/subscribe [:swig.subs.split/get-split split-id])
-        ops     (->> split :swig.split/ops :swig.operations/ops (maps :swig/type))]
+        ops     (->> split :swig.element/ops :swig.operations/ops (maps :swig/type))]
     (methods/wrap props
                   [(case (:swig.split/orientation split) :horizontal re/h-split :vertical re/v-split)
                    :on-split-change #(re-posh/dispatch [:swig.events.split/set-split-percent (:db/id split) %])

@@ -20,9 +20,7 @@
    {:db/ident :swig.tab/fullscreen :db/valueType :db.type/boolean :db/cardinality :db.cardinality/one}
    {:db/ident :swig.tab/handler :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one}
    {:db/ident :swig.tab/label :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.tab/ops :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.view/ops :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
-   {:db/ident :swig.split/ops :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
+   {:db/ident :swig.element/ops :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
    {:db/ident :swig.tab/order :db/valueType :db.type/long :db/cardinality :db.cardinality/one}
    {:db/ident :swig.tab/previous-view-id :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
    {:db/ident :swig.view/active-tab :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
