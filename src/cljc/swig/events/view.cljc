@@ -28,7 +28,6 @@
              view-ids)
         parent  (event-utils/get-parent (d/entity db split-id))
         view-id (second view-ids)]
-    (println "split id:" split-id (:swig/type split))
     (concat [[:db/add (:db/id parent) :swig.ref/child view-id]
              [:db/retractEntity split-id]]
             (for [id    view-ids

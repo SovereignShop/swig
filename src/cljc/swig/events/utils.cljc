@@ -7,7 +7,6 @@
         parent-id (d/q '[:find ?parent . :in $ ?child :where [?parent :swig.ref/child ?child]]
                        db
                        (:db/id entity))]
-    (println "parent id:" parent-id)
     (d/entity db parent-id)))
 
 (defn find-operation-entity [db id]
