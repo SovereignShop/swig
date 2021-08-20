@@ -13,10 +13,11 @@
                                 [:swig.type/split
                                  :swig.type/frame
                                  :swig.type/view
-                                 :skyhook.type/editor]]))
+                                 :skyhook.type/editor
+                                 :swig.type/cljscad-viewer]]))
          ops          (:swig.element/ops tab)
          container-id (str "tab-" id)]
-     (println "operations:" (map :db/id ops))
+     (println "operations:" (map :db/id) ops)
      (->> [re/h-box
            :attr  {:id (str "swig-" container-id)}
            :style {:flex "1 1 0%"}
