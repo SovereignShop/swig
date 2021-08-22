@@ -6,7 +6,7 @@
 
 (m/def-event-ds :swig.events.view/join-views
   [db id]
-  (let [tab (event-utils/find-operation-entity db id)
+  (let [tab (event-utils/resolve-operation-target db id)
         split (event-utils/find-ancestor tab :swig.type/split)
         split-id (:db/id split)
         view-ids

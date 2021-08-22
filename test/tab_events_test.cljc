@@ -29,6 +29,7 @@
         (is (= (query-active-tab db-after parent-id) tab-id))
         (is (= (query-active-tab db-before parent-id) (:db/id active-tab)))))))
 
+
 (deftest test-tabs-enter-exit-fullscreen
   (let [db (d/db-with
             (d/empty-db (to-ds-schema swig/full-schema))
@@ -83,7 +84,7 @@
                      (into #{} (map eav-added) join-after)
                      (into #{} (map eav-added) divide-before))))))))
 
-(deftest test-tabs-duplicate-and-divide
+#_(deftest test-tabs-duplicate-and-divide
   (let [db
         (d/db-with
          (d/empty-db (to-ds-schema swig/full-schema))

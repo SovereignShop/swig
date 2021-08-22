@@ -9,15 +9,21 @@
                        (:db/id entity))]
     (d/entity db parent-id)))
 
-(defn find-operation-entity [db id]
-  (let [elem-id (d/q '[:find ?id .
+(defn resolve-operation-target [db id]
+  (let [entity (d/entity db id)
+        entity-type (:swig/type entity)]
+    (case entity-type
+      (:swig.type/view :swig.type/tab :swig.type/split)
+      entity
+
+      (d/entity db
+                (d/q '[:find ?id .
                        :in $ ?op-id
                        :where
                        [?op :swig.operations/ops ?op-id]
                        [?id :swig.element/ops ?op]]
                      db
-                     id)]
-    (d/entity db elem-id)))
+                     id)))))
 
 (defn find-ancestor [elem type]
   (let [elem-type (:swig/type elem)]

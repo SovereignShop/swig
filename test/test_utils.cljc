@@ -13,7 +13,7 @@
                                (not= (:db/valueType m) :db.type/ref) (dissoc m :db/valueType))]))
         schema))
 
-(defn simple-tree
+(def simple-tree
   [:swig.type/view
    {:swig/ident :swig/root-view
     :swig.view/active-tab [:swig/ident :tabs/a]}
@@ -67,7 +67,8 @@
   (d/q '[:find [?id ...] :in $ :where [?id :swig/type :swig.type/frame]] db))
 
 (defn query-parent [db id]
-  (-> db (d/entity id) :swig.ref/parent))
+  (->> (d/q '[:find ?parent . :in $ ?child :where [?parent :swig.ref/child ?child]] db id)
+       (d/entity db)))
 
 (defn query-active-tab [db view-id]
   (d/q '[:find ?active-tab . :in $ ?view-id :where [?view-id :swig.view/active-tab ?active-tab]]

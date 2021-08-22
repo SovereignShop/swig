@@ -9,12 +9,12 @@
 
 (def-event-ds :swig.events.tab/enter-fullscreen
   [db id]
-  (let [tab (event-utils/find-operation-entity db id)
+  (let [tab (event-utils/resolve-operation-target db id)
         tab-id (:db/id tab)
         main-view  (d/entity db root-view)
         active-tab (:db/id (:swig.view/active-tab main-view))
         parent (event-utils/get-parent tab)]
-    (into [] #_(event-utils/update-active-tab db tab-id)
+    (into []
           [[:db/retract (:db/id parent) :swig.ref/child tab-id]
            {:db/id                    tab-id
             :swig.ref/previous-parent (:db/id parent)
@@ -34,7 +34,6 @@
      [:db.fn/retractAttribute tab-id    :swig.ref/previous-parent]
      [:db.fn/retractAttribute root-view :swig.view/previous-active-tab]
      [:db/retract root-view :swig.ref/child tab-id]
-     {:db/id           tab-id}
      {:db/id                previous-parent-id
       :swig.ref/child       tab-id
       :swig.view/active-tab tab-id}
@@ -53,7 +52,7 @@
 
 (def-event-ds :swig.events.tab/divide-tab
   [db id orientation]
-  (let [tab (event-utils/find-operation-entity db id)
+  (let [tab (event-utils/resolve-operation-target db id)
         tab-id (:db/id tab)
         view-id
         (d/q '[:find ?view-id .
@@ -68,7 +67,7 @@
         (d/q '[:find ?parent-id .
                :in $ ?view-id
                :where
-               [?parent-id :swig.ref/parent ?view-id]]
+               [?parent-id :swig.ref/child ?view-id]]
              db
              view-id)
         tab-ids
@@ -85,7 +84,6 @@
         new-view-id -1]
     (concat [{:db/id view-parent-id
               :swig.ref/child -2}
-             #_[:db/retract view-parent-id :swig.ref/child view-id]
              {:db/id                    new-split-id
               :swig.ref/child           [view-id new-view-id]
               :swig/index               (:swig/index view)
@@ -114,11 +112,7 @@
              [:db/add view-id :swig/index 1]]
             (for [tab-id tab-ids
                    :when (= id tab-id)]
-                [:db/retract view-id :swig.ref/child tab-id])
-            #_(for [id    tab-ids
-                    :when (not= id tab-id)]
-                [:db/add -1 :swig.ref/child id]
-                #_[:db/add id :swig.ref/parent -1]))))
+              [:db/retract view-id :swig.ref/child tab-id]))))
 
 (def-event-ds :swig.events.tab/delete-tab
   [db tab-id]
