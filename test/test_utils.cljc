@@ -24,8 +24,7 @@
 
 (def test-tree
   [:swig.type/view
-   {:swig/ident           :swig/root-view,
-    :swig.view/active-tab [:swig/ident :tabs/a]}
+   {:swig/ident           :swig/root-view}
    [[:swig.type/view
      {:swig/ident           :views/root,
       :swig.view/active-tab [:swig/ident :tabs/a]}

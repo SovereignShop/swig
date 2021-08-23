@@ -14,15 +14,14 @@
         main-view  (d/entity db root-view)
         active-tab (:db/id (:swig.view/active-tab main-view))
         parent (event-utils/get-parent tab)]
-    (into []
-          [[:db/retract (:db/id parent) :swig.ref/child tab-id]
-           {:db/id                    tab-id
-            :swig.ref/previous-parent (:db/id parent)
-            :swig.tab/fullscreen      true}
-           {:db/id                         root-view
-            :swig.ref/child                tab-id
-            :swig.view/active-tab          tab-id
-            :swig.view/previous-active-tab active-tab}])))
+    (cond->> [#_[:db/retract (:db/id parent) :swig.ref/child tab-id]
+              {:db/id                    tab-id
+               :swig.ref/previous-parent (:db/id parent)
+               :swig.tab/fullscreen      true}
+              {:db/id                         root-view
+               :swig.ref/child                tab-id
+               :swig.view/active-tab          tab-id}]
+      active-tab (conj [:db/add root-view :swig.view/previous-active-tab active-tab]))))
 
 (def-event-ds :swig.events.tab/exit-fullscreen
   [db tab-id]
@@ -30,25 +29,27 @@
         previous-parent-id  (:db/id (:swig.ref/previous-parent tab))
         main-view           (d/entity db root-view)
         previous-active-tab (:db/id (:swig.view/previous-active-tab main-view))]
-    [[:db.fn/retractAttribute tab-id    :swig.tab/fullscreen]
-     [:db.fn/retractAttribute tab-id    :swig.ref/previous-parent]
-     [:db.fn/retractAttribute root-view :swig.view/previous-active-tab]
-     [:db/retract root-view :swig.ref/child tab-id]
-     {:db/id                previous-parent-id
-      :swig.ref/child       tab-id
-      :swig.view/active-tab tab-id}
-     {:db/id                root-view
-      :swig.view/active-tab previous-active-tab}]))
+    (conj
+     [[:db.fn/retractAttribute tab-id    :swig.tab/fullscreen]
+      [:db.fn/retractAttribute tab-id    :swig.ref/previous-parent]
+      [:db.fn/retractAttribute root-view :swig.view/previous-active-tab]
+      [:db/retract root-view :swig.ref/child tab-id]
+      {:db/id                previous-parent-id
+       :swig.ref/child       tab-id}]
+     (if previous-active-tab
+       [:db/add root-view :swig.view/active-tab previous-active-tab]
+       [:db.fn/retractAttribute root-view :swig.view/active-tab]))))
 
 (def-event-ds :swig.events.tab/set-active-tab
   [_ view-id tab-id]
   [[:db/add view-id :swig.view/active-tab tab-id]])
 
 (def-event-ds ::move-tab
-  [_ tab-id view-id]
-  (let [parent (event-utils/get-parent tab-id)]
-    [[:db/add view-id :swig.ref/child tab-id]
-     [:db/retract (:db/id parent) :swig.ref/child tab-id]]))
+  [db tab-id view-id]
+  (let [parent-id (:db/id (event-utils/get-parent (d/entity db tab-id)))]
+    (when (not= parent-id view-id)
+      [[:db/retract parent-id :swig.ref/child tab-id]
+       [:db/add view-id :swig.ref/child tab-id]])))
 
 (def-event-ds :swig.events.tab/divide-tab
   [db id orientation]

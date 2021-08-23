@@ -38,7 +38,7 @@
   (s/or :empty-element ::empty-element
         :element ::element))
 
-(def internal-keys #{:swig/index :swig/type})
+(def internal-keys #{:swig/index :swig/type :swig.ref/child})
 
 (defmulti compile-hiccup-impl (fn [elem _ _] (:swig/type elem)))
 
@@ -117,6 +117,36 @@
                                 parent)
       (mapv #(facts->hiccup % facts)
             (sort-by :swig/index children))])))
+
+
+(defn substitute-idents [db e]
+  (if (and (map? e)
+           (= (count e) 1)
+           (:db/id e))
+    [:swig/ident (d/q '[:find ?ident . :in $ ?id :where [?id :swig/ident ?ident]] db (:db/id e))]
+    e))
+
+(defn facts->hiccup-debug
+  ([facts]
+   (facts->hiccup-debug (d/entity facts root-view) facts))
+  ([parent facts]
+   (let [parent-id (:db/id parent)
+         children  (d/q '[:find [(pull ?id [*]) ...]
+                          :in $ ?parent
+                          :where
+                          [?parent :swig.ref/child ?id]]
+                        facts
+                        parent-id)]
+     [(:swig/type parent) (into (with-meta {} (:swig/meta parent))
+                                (comp
+                                 (remove (comp internal-keys key))
+                                 (map (fn [[k v]]
+                                        [k (substitute-idents facts v)])))
+                                parent)
+      (mapv #(facts->hiccup-debug % facts)
+            (sort-by :swig/index children))])))
+
+
 
 (comment
 
