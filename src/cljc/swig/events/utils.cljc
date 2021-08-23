@@ -9,6 +9,13 @@
                        (:db/id entity))]
     (d/entity db parent-id)))
 
+(defn copy-entity [entity new-id]
+  (-> (into {} entity)
+      (assoc  :db/id new-id)
+      (dissoc :swig/ident)
+      (update :swig.ref/child (partial mapv :db/id))
+      (update :swig.view/active-tab :db/id)))
+
 (defn resolve-operation-target [db id]
   (let [entity (d/entity db id)
         entity-type (:swig/type entity)]

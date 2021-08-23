@@ -35,3 +35,19 @@
               [:db/retractEntity id])
             (for [tab-id tab-ids]
               [:db/add view-id :swig.ref/child tab-id]))))
+
+(m/def-event-ds :swig.events.view/duplicate-view
+  [db view-id]
+  (let [view (d/entity db view-id)
+        parent (event-utils/get-parent view)
+        parent-id (:db/id parent)
+        new-view-id -1
+        new-split-id -2
+        view-copy (event-utils/copy-entity view new-view-id)]
+    [[:db/retract parent-id :swig.ref/child view-id]
+     [:db/add parent-id :swig.ref/child new-split-id]
+     {:db/id new-split-id
+      :swig.ref/child [view-id view-copy]
+      :swig/type :swig.type/split
+      :swig.split/orientation :vertical
+      :swig.split/split-percent 50.1}]))
