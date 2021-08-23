@@ -22,7 +22,7 @@
   (let [db (d/db-with (d/empty-db (to-ds-schema swig/full-schema))
                       (parser/hiccup->facts test-tree))]
     (doseq [view-id (query-views db)
-            :when (not= (->> view-id (d/entity db) :swig/ident) :swig/root-view)]
+            :when (eu/get-parent (d/entity db view-id))]
       (let [{before-duplicate :db-before after-duplicate :db-after}
             (d/with db (ve/duplicate-view db view-id))
             view (d/entity after-duplicate view-id)
