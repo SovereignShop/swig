@@ -127,3 +127,10 @@
         parent (event-utils/get-parent tab)]
     (conj (event-utils/update-active-tab db tab)
           [:db/retract (:db/id parent) :swig.ref/child tab-id])))
+
+(def-event-ds :swig.events.tab/select-tab
+  [db tab-id]
+  (let [active-tabs (d/q '[:find [?id ...] :in $ :where [?id :swig.tab/active true]] db)]
+    (conj (vec (for [id active-tabs]
+                 [:db.fn/retractAttribute id :swig.tab/active]))
+          [:db/add tab-id :swig.tab/active true])))

@@ -17,9 +17,12 @@
                                  :swig.type/cljscad-viewer]]))
          ops          (:swig.element/ops tab)
          container-id (str "tab-" id)]
-     (println "operations:" (map :db/id) ops)
      (->> [re/h-box
-           :attr  {:id (str "swig-" container-id)}
+           :attr  {:id (str "swig-" container-id)
+                   :on-mouse-down (fn [e]
+                                    (.preventDefault e)
+                                    (.stopPropagation e)
+                                    (re-posh/dispatch [:swig.events.tab/select-tab id]))}
            :style {:flex "1 1 0%"}
            :children
            [^{:key (str "exit-fullscreen-" id)}
