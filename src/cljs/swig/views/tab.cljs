@@ -20,8 +20,8 @@
      (->> [re/h-box
            :attr  {:id (str "swig-" container-id)
                    :on-mouse-down (fn [e]
-                                    (.preventDefault e)
-                                    (.stopPropagation e)
+                                    #_(.preventDefault e)
+                                    #_(.stopPropagation e)
                                     (re-posh/dispatch [:swig.events.tab/select-tab id]))}
            :style {:flex "1 1 0%"}
            :children

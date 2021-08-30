@@ -56,6 +56,9 @@
          [:find (['pull id pattern] :seq) '. & more]
          [:pull pattern (into [:find id '.] more)]
 
+         [:find (['pull-entity id pattern] :seq) '. & more]
+         [:pull-entity pattern (into [:find id '.] more)]
+
          [:find (['pull-with op id pattern] :seq) '. & more]
          [:pull-with op pattern (into [:find id '.] more)]
 
@@ -107,7 +110,20 @@
                       :pattern (quote ~pull-pattern)
                       :id      ids#})
                    (re-posh.core/reg-sub ~query-name ~signal-fn-name ~handler-fn-name))
-              `(def ~query-name-sym (quote ~query))               )
+              `(def ~query-name-sym (quote ~query)))
+
+            [:pull-entity pull-pattern find-expr]
+            (if-cljs &env
+              `(do (def ~query-name-sym (quote ~query))
+                   (re-posh.core/reg-query-sub ~find-ids-query (quote ~find-expr))
+                   (defn ~signal-fn-name  [params#]
+                     (re-posh.core/subscribe (into [~find-ids-query] (next params#))) )
+                   (defn ~handler-fn-name [ids# _#]
+                     {:type    :pull-entity
+                      :pattern (quote ~pull-pattern)
+                      :id      ids#})
+                   (re-posh.core/reg-sub ~query-name ~signal-fn-name ~handler-fn-name))
+              `(def ~query-name-sym (quote ~query)))
 
             [:pull-with op pull-pattern find-expr]
             (if-cljs &env

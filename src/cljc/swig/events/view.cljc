@@ -36,8 +36,8 @@
             (for [tab-id tab-ids]
               [:db/add view-id :swig.ref/child tab-id]))))
 
-(m/def-event-ds :swig.events.view/duplicate-view
-  [db view-id]
+(m/def-event-ds :swig.events.view/divide-view
+  [db view-id orientation]
   (let [view (d/entity db view-id)
         parent (event-utils/get-parent view)
         parent-id (:db/id parent)
@@ -49,5 +49,13 @@
      {:db/id new-split-id
       :swig.ref/child [view-id view-copy]
       :swig/type :swig.type/split
-      :swig.split/orientation :vertical
+      :swig.split/orientation orientation
       :swig.split/split-percent 50.1}]))
+
+(m/def-event-ds :swig.events.view/divide-vertical
+  [db view-id]
+  (divide-view db view-id :vertical))
+
+(m/def-event-ds :swig.events.view/divide-horizontal
+  [db view-id]
+  (divide-view db view-id :horizontal))

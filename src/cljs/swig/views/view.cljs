@@ -40,7 +40,12 @@
               [methods/dispatch child]))]
           [re/v-box
            :gap "0px"
-           :attr {:id (str "swig-" view-id)}
+           :attr {:id (str "swig-" view-id)
+                  :on-mouse-down
+                  (fn [e]
+                    (.stopPropagation e)
+                    (.preventDefault e)
+                    (re-posh/dispatch [:keys.core/update-context {:id view-id}]))}
            :style {:flex "1 1 0%"}
            :children
            [[re/v-box
