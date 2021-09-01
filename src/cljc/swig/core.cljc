@@ -26,6 +26,10 @@
    {:db/ident :swig.view/active-tab :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
    {:db/ident :swig.view/previous-active-tab :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
    {:db/ident :swig.view/tab-type :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one}
+   {:db/ident :swig.view/left :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
+   {:db/ident :swig.view/top :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
+   {:db/ident :swig.view/width :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
+   {:db/ident :swig.view/height :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
    {:db/ident :swig.split/orientation :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one}
    {:db/ident :swig.split/split-percent :db/valueType :db.type/number :db/cardinality :db.cardinality/one}
    {:db/ident :swig.cell/element :db/valueType :db.type/string :db/cardinality :db.cardinality/one}
