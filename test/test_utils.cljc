@@ -56,6 +56,20 @@
                          :swig.cell/element "D"}}
        []]]]]])
 
+(def split-tree
+  [:swig.type/view
+   {:swig/ident           :swig/root-view}
+   [[:swig.type/split
+     {:swig.split/orientation :vertical
+      :swig.split/split-percent 50.1}
+     [[:swig.type/view
+       {:swig/ident :views/a
+        :swig/has-focus? true}
+       []]
+      [:swig.type/view
+       {:swig/ident :views/b}
+       []]]]]])
+
 (defn query-tabs [db]
   (d/q '[:find [?id ...] :in $ :where [?id :swig/type :swig.type/tab]] db))
 

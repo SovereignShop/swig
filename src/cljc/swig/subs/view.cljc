@@ -1,10 +1,11 @@
 (ns swig.subs.view
+  (:require-macros
+   [swig.macros :refer [def-sub def-pull-sub]])
   (:require
-   [re-posh.core :as re-posh]
-   [swig.macros :as m]))
+   [re-posh.core :as re-posh]))
 
 
-(m/def-sub :swig.subs.view/get-active-tab
+(def-sub :swig.subs.view/get-active-tab
   [:find (pull ?tab-id [:swig.tab/fullscreen
                         :swig/index
                         :swig.tab/handler
@@ -18,7 +19,7 @@
    :where
    [?view-id :swig.view/active-tab ?tab-id]])
 
-(m/def-sub :swig.subs.view/get-tabs
+(def-sub :swig.subs.view/get-tabs
   [:find (pull ?tab-id [:swig.tab/fullscreen
                         :swig/index
                         :swig.tab/handler
@@ -40,11 +41,11 @@
    [?view-id :swig.ref/child ?tab-id]
    [?tab-id :swig/type :swig.type/tab]])
 
-(m/def-pull-sub :swig.subs.view/get-view-ops
+(def-pull-sub :swig.subs.view/get-view-ops
   [:swig.element/ops
    :swig.view/tab-type])
 
-(m/def-sub :swig.subs.view/get-view-ids
+(def-sub :swig.subs.view/get-view-ids
   [:find [?view-id ...]
    :in $ ?split-id
    :where
