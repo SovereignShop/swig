@@ -93,3 +93,29 @@
                         (mapcat walk-refs v)
                         (walk-refs v)))]
             ret))))
+
+(defn deep-copy
+  ([entity]
+   (deep-copy entity 0))
+  ([entity id]
+   (let [db (d/entity-db entity)
+         schema (db/-schema db)
+         ids (atom id)
+         id-mapping (atom {})
+         walk (fn walk [e]
+                (if-let [new-id (get @id-mapping (:db/id e))]
+                  new-id
+                  (into {:db/id (let [new-id (swap! ids dec)]
+                                  (swap! id-mapping assoc (:db/id e) new-id)
+                                  new-id)}
+                        (comp
+                         (remove (fn [x] (= (key x) :swig/ident)))
+                         (map (fn [[k v :as pair]]
+                                (let [s (k schema)]
+                                  (if (= (:db/valueType s) :db.type/ref)
+                                    (if (= (:db/cardinality s) :db.cardinality/many)
+                                      [k (mapv walk v)]
+                                      [k (walk v)])
+                                    pair)))))
+                        e)))]
+     (walk entity))))
