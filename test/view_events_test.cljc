@@ -31,7 +31,7 @@
             parent (eu/get-parent view)
             views (:swig.ref/child parent)]
         (is (= (count views) 2))
-        (is (apply = (map :swig.ref/child views)))
+        (is (empty? (apply clojure.set/intersection (map (comp set #(map :db/id %) :swig.ref/child) views))))
         (is (= (:swig/type parent) :swig.type/split))))))
 
 (deftest test-goto-left

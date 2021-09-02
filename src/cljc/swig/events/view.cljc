@@ -46,9 +46,7 @@
                       db
                       parent-id
                       view-id)]
-    (into [[:db/retract gparent-id :swig.ref/child parent-id]
-           [:db/retract parent-id :swig.ref/child view-id]
-           [:db.fn/retractEntity view-id]
+    (into [[:db.fn/retractEntity view-id]
            [:db.fn/retractEntity parent-id]]
           (for [c children]
             [:db/add gparent-id :swig.ref/child c]))))
@@ -162,7 +160,6 @@
        (when target-view-id
          (re-posh/dispatch [:keys.core/update-context {:id target-view-id}])))
     (when target-view-id
-      (println "tx-data:" tx-data)
       (into tx-data cat (apply-events db-after target-view-id :swig.event/focus)))))
 
 (m/def-event-ds :swig.events.view/goto-right
