@@ -150,7 +150,7 @@
 
 (comment
 
-  (def tree
+  #_(def tree
     [layout
      {:swig.split/orientation   :vertical
       :swig.split/split-percent 50}

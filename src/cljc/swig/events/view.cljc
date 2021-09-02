@@ -6,6 +6,53 @@
    #?(:cljs [re-posh.core :as re-posh])
    [swig.macros :as m]))
 
+(def get-descendants
+  '[[(get-descendants ?parent ?child)
+     [?parent :swig.ref/child ?child]]
+    [(get-descendants ?parent ?child)
+     [?parent :swig.ref/child ?p]
+     (get-descendants ?p ?child)]])
+
+(defn apply-events [db id event]
+  (let [events
+        (d/q '[:find ?event-name ?child
+               :in $ ?parent ?on-event %
+               :where
+               (get-descendants ?parent ?child)
+               [?child :swig/event ?event]
+               [?event :swig.event/name ?event-name]
+               [?event :swig.event/on ?on-event]]
+             db
+             id
+             event
+             get-descendants)]
+    (for [[name id] events
+          :let [handler (get @db/handlers name)]
+          :when handler]
+      (handler db id))))
+
+(m/def-event-ds :swig.events.view/delete
+  [db view-id]
+  (let [view (d/entity db view-id)
+        parent (event-utils/get-parent view)
+        parent-id (:db/id parent)
+        gparent (event-utils/get-parent parent)
+        gparent-id (:db/id gparent)
+        children (d/q '[:find [?c ...]
+                        :in $ ?id ?exclude
+                        :where
+                        [?id :swig.ref/child ?c]
+                        [(not= ?c ?exclude)]]
+                      db
+                      parent-id
+                      view-id)]
+    (into [[:db/retract gparent-id :swig.ref/child parent-id]
+           [:db/retract parent-id :swig.ref/child view-id]
+           [:db.fn/retractEntity view-id]
+           [:db.fn/retractEntity parent-id]]
+          (for [c children]
+            [:db/add gparent-id :swig.ref/child c]))))
+
 (m/def-event-ds :swig.events.view/join-views
   [db id]
   (let [tab (event-utils/resolve-operation-target db id)
@@ -38,14 +85,6 @@
             (for [tab-id tab-ids]
               [:db/add view-id :swig.ref/child tab-id]))))
 
-
-(def get-descendants
-  '[[(get-descendants ?parent ?child)
-     [?parent :swig.ref/child ?child]]
-    [(get-descendants ?parent ?child)
-     [?parent :swig.ref/child ?p]
-     (get-descendants ?p ?child)]])
-
 (defn copy-editor [db id]
   (let [editor (d/entity db id)
         parent (event-utils/get-parent editor)
@@ -63,24 +102,6 @@
               (update :editor.doc/cursor :db/id)))
          (update :swig/event #(mapv :db/id %))
          (dissoc :cursor/token))]))
-
-(defn apply-events [db id event]
-  (let [events
-        (d/q '[:find ?event-name ?child
-               :in $ ?parent ?on-event %
-               :where
-               (get-descendants ?parent ?child)
-               [?child :swig/event ?event]
-               [?event :swig.event/name ?event-name]
-               [?event :swig.event/on ?on-event]]
-             db
-             id
-             event
-             get-descendants)]
-    (doseq [[name id] events
-            :let [handler (get @db/handlers name)]
-            :when handler]
-      (handler db id))))
 
 (m/def-event-ds :swig.events.view/divide-view
   [db view-id orientation]
@@ -100,7 +121,7 @@
                   :swig/type :swig.type/split
                   :swig.split/orientation orientation
                   :swig.split/split-percent 50.1}])]
-    (into tx-data (apply-events after-divide (get tempids new-view-id) :swig.event/copy))))
+    (into tx-data cat (apply-events after-divide (get tempids new-view-id) :swig.event/copy))))
 
 (m/def-event-ds :swig.events.view/divide-vertical
   [db view-id]
@@ -142,7 +163,7 @@
          (re-posh/dispatch [:keys.core/update-context {:id target-view-id}])))
     (when target-view-id
       (println "tx-data:" tx-data)
-      (into tx-data (apply-events db-after target-view-id :swig.event/focus)))))
+      (into tx-data cat (apply-events db-after target-view-id :swig.event/focus)))))
 
 (m/def-event-ds :swig.events.view/goto-right
   [db view-id]
@@ -174,7 +195,7 @@
        (when target-view-id
          (re-posh/dispatch [:keys.core/update-context {:id target-view-id}])))
     (when target-view-id
-      (into tx-data (apply-events db-after target-view-id :swig.event/focus)))))
+      (into tx-data cat (apply-events db-after target-view-id :swig.event/focus)))))
 
 (comment
 

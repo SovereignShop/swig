@@ -60,3 +60,21 @@
                 db
                 root-view
                 ve/get-descendants)))))
+
+(deftest test-delete-view
+  (let [db (d/db-with (d/empty-db (to-ds-schema swig/full-schema))
+                      (parser/hiccup->facts split-tree))]
+    (doseq [view-id (query-views db)
+            :let [parent (eu/get-parent (d/entity db view-id))]
+            :when parent]
+      (let [{after-delete :db-after before-delete :db-before}
+            (d/with db (ve/delete db view-id))
+            gparent-id (:db/id (eu/get-parent (d/entity db (:db/id parent))))
+            view-siblings (remove #(= (:db/id %) view-id)
+                                  (:swig.ref/child parent))
+            gparent (d/entity after-delete gparent-id)
+            gparent-children (:swig.ref/child gparent)]
+        (is (= {:db/id view-id} (d/pull after-delete '[*] view-id)))
+        (is (= {:db/id (:db/id parent)} (d/pull after-delete '[*] (:db/id parent))))
+        (is (= (map :db/id gparent-children)
+               (map :db/id view-siblings)))))))
