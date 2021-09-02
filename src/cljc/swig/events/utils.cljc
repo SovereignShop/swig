@@ -96,11 +96,11 @@
 
 (defn deep-copy
   ([entity]
-   (deep-copy entity 0))
+   (deep-copy entity -1))
   ([entity id]
    (let [db (d/entity-db entity)
          schema (db/-schema db)
-         ids (atom id)
+         ids (atom (inc id))
          id-mapping (atom {})
          walk (fn walk [e]
                 (if-let [new-id (get @id-mapping (:db/id e))]

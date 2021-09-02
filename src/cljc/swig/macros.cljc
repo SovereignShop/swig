@@ -2,6 +2,7 @@
   (:require
    #?@(:clj [[clojure.core.match :refer [match]]]
        :cljs [[cljs.core.match :refer-macros [match]]
+              [swig.db]
               [re-posh.core :as re-posh]])))
 
 (defn disect-test-expr [expr]
@@ -47,6 +48,7 @@
   (let [sym (symbol (name k))]
     (if-cljs &env
       `(do (defn ~sym ~args ~@body)
+           (swap! swig.db/handlers assoc ~k ~sym)
            (re-posh.core/reg-event-ds ~k (fn [db# params#]
                                            (apply ~sym db# (next params#)))))
       `(defn ~sym ~args ~@body))))
