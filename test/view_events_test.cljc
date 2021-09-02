@@ -66,8 +66,8 @@
                       (parser/hiccup->facts split-tree))]
     (doseq [view-id (query-views db)
             :let [parent (eu/get-parent (d/entity db view-id))]
-            :when parent]
-      (let [{after-delete :db-after before-delete :db-before}
+            :when (and parent (= (:swig/type parent) :swig.type/split))]
+      (let [{after-delete :db-after}
             (d/with db (ve/delete db view-id))
             gparent-id (:db/id (eu/get-parent (d/entity db (:db/id parent))))
             view-siblings (remove #(= (:db/id %) view-id)
