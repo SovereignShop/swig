@@ -87,9 +87,8 @@
   (let [view (d/entity db view-id)
         parent (event-utils/get-parent view)
         parent-id (:db/id parent)
-        new-view-id -1
-        new-split-id -2
-        view-copy (assoc (event-utils/copy-entity view new-view-id)
+        new-split-id -1
+        view-copy (assoc (event-utils/deep-copy view -2)
                          :swig/index (inc (:swig/index view)))]
     [[:db/retract parent-id :swig.ref/child view-id]
      [:db/add parent-id :swig.ref/child new-split-id]
