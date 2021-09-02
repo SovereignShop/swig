@@ -1,6 +1,8 @@
 (ns swig.events.utils
   (:require
+   [datascript.db :as db]
    [datascript.core :as d]))
+
 
 (defn get-parent [entity]
   (let [db (d/entity-db entity)
@@ -70,3 +72,24 @@
          :in $ ?id
          :where
          [?id :swig.ref/child ?child-id]]))
+
+(def get-refs
+  (memoize
+   (fn [schema]
+     (let [refs (into {}
+                      (filter (fn [[k v]] (= (:db/valueType v) :db.type/ref)))
+                      schema)]
+       refs))))
+
+(defn walk-refs [entity]
+  (let [db (d/entity-db entity)
+        ref-idents (get-refs (db/-schema db))]
+    (cons entity
+          (for [[k v] (seq entity)
+                :let [s (k ref-idents)]
+                :when s
+                ret (let [card (:db/cardinality s)]
+                      (if (= card :db.cardinality/many)
+                        (mapcat walk-refs v)
+                        (walk-refs v)))]
+            ret))))

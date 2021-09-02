@@ -37,6 +37,51 @@
             (for [tab-id tab-ids]
               [:db/add view-id :swig.ref/child tab-id]))))
 
+
+(def get-descendants
+  '[[(get-descendants ?parent ?child)
+     [?parent :swig.ref/child ?child]]
+    [(get-descendants ?parent ?child)
+     [?parent :swig.ref/child ?p]
+     (get-descendants ?p ?child)]])
+
+
+#?(:cljs
+   (defn dispatch-copy-events [db id]
+     (let [copy-entity-events
+           (d/q '[:find ?event-name ?child
+                  :in $ parent %
+                  :where
+                  (get-descendants ?parent ?child)
+                  [?child :swig/event ?event]
+                  [?event :swig.event/name ?event-name]
+                  [?event :swig.event/on :swig.event/copy]]
+                db
+                id
+                get-descendants)]
+       (println "events:" copy-entity-events)
+       (doseq [event copy-entity-events]
+         (do (println "sending event:" event)
+             (re-posh/dispatch event))))))
+
+(defn copy-editor [db id]
+  (let [editor (d/entity db id)
+        parent (event-utils/get-parent editor)
+        parent-id (:db/id parent)
+        document (:editor/document editor)]
+    [[:db/retract parent-id :swig.ref/child id]
+     (-> (into {} editor)
+         (assoc
+          :db/id -1
+          :editor/document
+          (-> (into {} document)
+              (assoc
+               :db/id -2
+               :editor.doc/linked-to (:db/id document))
+              (update :editor.doc/cursor :db/id)))
+         (update :swig/event #(mapv :db/id %))
+         (dissoc :cursor/token))]))
+
 (m/def-event-ds :swig.events.view/divide-view
   [db view-id orientation]
   (let [view (d/entity db view-id)
@@ -62,63 +107,62 @@
   [db view-id]
   (divide-view db view-id :horizontal))
 
-(def get-descendants
-  '[[(get-descendants ?parent ?child)
-     [?parent :swig.ref/child ?child]]
-    [(get-descendants ?parent ?child)
-     [?parent :swig.ref/child ?p]
-     (get-descendants ?p ?child)]])
-
 #?(:cljs
    (defn dispatch-focus-events [db id]
      (let [unfocus-events
-             (d/q
-              '[:find ?event-name ?child
-                :in $ ?parent %
-                :where
-                (get-descendants ?parent ?child)
-                [?child :swig/event ?event]
-                [?event :swig.event/name ?event-name]
-                [?event :swig.event/on :swig.event/unfocus]]
-              db
-              id
-              get-descendants)
+           (d/q
+            '[:find ?event-name ?child
+              :in $ ?parent %
+              :where
+              (get-descendants ?parent ?child)
+              [?child :swig/event ?event]
+              [?event :swig.event/name ?event-name]
+              [?event :swig.event/on :swig.event/unfocus]]
+            db
+            id
+            get-descendants)
 
-             focus-events
-             (d/q
-              '[:find ?event-name ?child
-                :in $ ?parent %
-                :where
-                (get-descendants ?parent ?child)
-                [?child :swig/event ?event]
-                [?event :swig.event/name ?event-name]
-                [?event :swig.event/on :swig.event/focus]]
-              db
-              id
-              get-descendants)]
-         (doseq [event (concat unfocus-events focus-events)]
-           (re-posh/dispatch event)))))
+           focus-events
+           (d/q
+            '[:find ?event-name ?child
+              :in $ ?parent %
+              :where
+              (get-descendants ?parent ?child)
+              [?child :swig/event ?event]
+              [?event :swig.event/name ?event-name]
+              [?event :swig.event/on :swig.event/focus]]
+            db
+            id
+            get-descendants)]
+       (doseq [event (concat unfocus-events focus-events)]
+         (re-posh/dispatch event)))))
 
 (m/def-event-ds :swig.events.view/goto-left
   [db view-id]
   (let [view (d/entity db view-id)
         view-id (:db/id view)
-        parent (event-utils/get-parent view)
 
         [target-view-id]
-        (d/q
-         '[:find [?id (max ?index)]
-           :in $ ?parent ?idx
-           :where
-           [?parent :swig.ref/child ?id]
-           [?id :swig/type :swig.type/view]
-           [?id :swig/index ?index]
-           [(< ?index ?idx)]]
-         db
-         (:db/id parent)
-         (:swig/index view))]
+        (reduce (fn [ret x]
+                  (if (> (nth x 1) (nth ret 1))
+                    x
+                    ret))
+                (d/q
+                 '[:find ?view ?left
+                   :in $ ?l ?t
+                   :where
+                   [?view :swig/type :swig.type/view]
+                   [?view :swig.view/left ?left]
+                   [?view :swig.view/top ?top]
+                   [(< ?left ?l)]
+                   [(>= ?top ?t)]]
+                 db
+                 (:swig.view/left view)
+                 (:swig.view/top view)))]
     #?(:cljs
-       (dispatch-focus-events db target-view-id))
+       (when target-view-id
+         (dispatch-focus-events db target-view-id)
+         (re-posh/dispatch [:keys.core/update-context {:id target-view-id}])))
     (when target-view-id
       [[:db.fn/retractAttribute view-id :swig/has-focus?]
        [:db/add target-view-id :swig/has-focus? true]])))
@@ -127,22 +171,28 @@
   [db view-id]
   (let [view (d/entity db view-id)
         view-id (:db/id view)
-        parent (event-utils/get-parent view)
 
         [target-view-id]
-        (d/q
-         '[:find [?id (max ?index)]
-           :in $ ?parent ?idx
-           :where
-           [?parent :swig.ref/child ?id]
-           [?id :swig/type :swig.type/view]
-           [?id :swig/index ?index]
-           [(> ?index ?idx)]]
-         db
-         (:db/id parent)
-         (:swig/index view))]
+        (reduce (fn [ret x]
+                  (if (< (nth x 1) (nth ret 1))
+                    x
+                    ret))
+                (d/q
+                 '[:find ?view ?left
+                   :in $ ?l ?t
+                   :where
+                   [?view :swig/type :swig.type/view]
+                   [?view :swig.view/left ?left]
+                   [?view :swig.view/top ?top]
+                   [(> ?left ?l)]
+                   [(>= ?top ?t)]]
+                 db
+                 (:swig.view/left view)
+                 (:swig.view/top view)))]
     #?(:cljs
-       (dispatch-focus-events db target-view-id))
+       (when target-view-id
+         (dispatch-focus-events db target-view-id)
+         (re-posh/dispatch [:keys.core/update-context {:id target-view-id}])))
     (when target-view-id
       [[:db.fn/retractAttribute view-id :swig/has-focus?]
        [:db/add target-view-id :swig/has-focus? true]])))
