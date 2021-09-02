@@ -51,6 +51,26 @@
           (for [c children]
             [:db/add gparent-id :swig.ref/child c]))))
 
+(m/def-event-ds :swig.events.view/close
+  [db view-id]
+  (let [view (d/entity db view-id)
+        parent (event-utils/get-parent view)
+        parent-id (:db/id parent)
+        gparent (event-utils/get-parent parent)
+        gparent-id (:db/id gparent)
+        children (d/q '[:find [?c ...]
+                        :in $ ?id ?exclude
+                        :where
+                        [?id :swig.ref/child ?c]
+                        [(not= ?c ?exclude)]]
+                      db
+                      parent-id
+                      view-id)]
+    (into [[:db/retract parent-id :swig.ref/child view-id]
+           [:db.fn/retractEntity parent-id]]
+          (for [c children]
+            [:db/add gparent-id :swig.ref/child c]))))
+
 (m/def-event-ds :swig.events.view/join-views
   [db id]
   (let [tab (event-utils/resolve-operation-target db id)
