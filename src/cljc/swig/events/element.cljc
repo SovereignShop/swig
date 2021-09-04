@@ -3,9 +3,12 @@
      (:require-macros
       [swig.macros :refer [def-event-ds]]))
   (:require
-   [swig.core :refer [context-ident]]
    #?(:clj [swig.macros :refer [def-event-ds]])))
 
+(def context-ident
+  [:swig/ident :swig.ident/context])
+
 (def-event-ds ::set-context
-  [db id]
-  [[:db/add context-ident :swig.context/id id]])
+  [_ id]
+  [{:db/ident context-ident
+    :swig.context/id id}])

@@ -25,7 +25,6 @@
         active-tab-id (:db/id @active-tab)]
     (when-not (contains? (set (map :db/id @tabs)) active-tab-id)
       (js/console.warn "No active-tab for view:" view-id))
-    (println "tab children:" @tabs children)
     (if (= tabs-count 0)
       [re/v-box
        :attr {:id (str "swig-" view-id)}

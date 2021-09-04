@@ -24,7 +24,8 @@
       [swig.events.resize]
       [swig.events.split]
       [swig.events.tab]
-      [swig.events.view]))
+      [swig.events.view]
+      [swig.events.element]))
    :clj
    (ns swig.views))
 
