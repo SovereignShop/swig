@@ -4,6 +4,7 @@
       [re-com.core :as re]
       [re-posh.core :as re-posh]
       [swig.dispatch :as methods]
+      [swig.views.element :refer [element]]
       [swig.views.tab]
       [swig.views.view]
       [swig.views.split]
@@ -32,11 +33,12 @@
 #?(:cljs
    (defn root-component [view-id]
      (let [elem @(re-posh/subscribe [:swig.subs.element/get-element view-id])]
+       (println "root element:" elem)
        [re/v-box
         :height "100vh"
         :width "100vw"
         :children
-        [[methods/dispatch elem]]]))
+        [[element elem]]]))
    :clj
    (defn root-component [_]
      (throw (Exception. "Not implemented for clj."))))

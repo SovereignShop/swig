@@ -28,18 +28,14 @@
    :where
    [?id :swig/type ?type]])
 
-(m/def-sub :swig.subs.element/get-children
-  [:find (pull ?child-id [:db/id
-                          {:swig.element/ops
-                           [:swig/type
-                            {:swig.operations/ops
-                             [:swig/type]}]}
-                          :swig.container/capabilities
-                          :swig/ident
-                          :swig/index
-                          :swig.dispatch/handler
-                          :swig/type])
-   :in $ ?id [?type ...]
-   :where
-   [?id :swig.ref/child ?child-id]
-   [?child-id :swig/type ?type]])
+(m/def-pull-sub :swig.subs.element/get-props
+  [{:swig.element/ops
+    [:swig/type
+     {:swig.operations/ops
+      [:swig/type]}]}
+   :swig.container/capabilities
+   :swig.element/maximized-element
+   :swig/ident
+   :swig/index
+   :swig/type
+   :swig.ref/child])
