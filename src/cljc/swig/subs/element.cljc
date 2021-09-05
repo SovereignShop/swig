@@ -38,4 +38,6 @@
    :swig/ident
    :swig/index
    :swig/type
-   :swig.ref/child])
+   {:swig.ref/child
+    [:db/id
+     :swig/index]}])

@@ -27,7 +27,6 @@
             :child (if maximized-element [element maximized-element] [:div])]
            [re/box
             :style (if maximized-element invisible-styles normal-styles)
-            :child (do (println "props:" props)
-                       (methods/dispatch props))]]]
+            :child [methods/dispatch props]]]]
          (capability-container props)
          (methods/wrap props))))

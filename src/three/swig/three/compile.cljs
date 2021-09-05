@@ -766,7 +766,6 @@
   (let [m         (meta props)
         form-id   (:form-id m)
         editor-id (:editor-id m)]
-    (println "PROPS TYPE: " form-id editor-id)
     (cond-> (assoc props
                    :swig/type type
                    :swig/children (map to-tree children))

@@ -22,7 +22,6 @@
                (re-posh/dispatch [:swig.events.tab/divide-tab id :vertical]))])
 
 (defmethod methods/dispatch :swig.operation/fullscreen [{:keys [db/id]}]
-  (println "ID:" (str "fullscreen-" id))
   ^{:key (str "fullscreen-" id)}
   [re/md-icon-button
    :size :smaller

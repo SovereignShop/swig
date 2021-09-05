@@ -10,14 +10,12 @@
    (let [child        (first (:swig.ref/child props))
          ops          (:swig.element/ops props)
          container-id (str "tab-" id)]
-     (println "children:" (:swig.ref/child props))
      [re/h-box
-      :attr {:id container-id}
+      :attr (:id container-id)
       :class "swig-tab"
       :style {:flex "1 1 0%"}
       :children
       [(when ops
-         (methods/dispatch ops))
+         [methods/dispatch ops])
        (when child
-         (println "element:" child)
          [element child])]])))

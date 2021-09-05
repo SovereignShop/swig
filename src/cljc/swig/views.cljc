@@ -34,7 +34,6 @@
 #?(:cljs
    (defn root-component [view-id]
      (let [elem @(re-posh/subscribe [:swig.subs.element/get-element view-id])]
-       (println "root element:" elem)
        [re/v-box
         :height "100vh"
         :width "100vw"
