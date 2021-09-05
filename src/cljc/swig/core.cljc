@@ -8,11 +8,9 @@
       [re-posh.core :as re-posh]
       [reagent.dom :as reagent])))
 
-(def context-ident
-  [:swig/ident :swig/context])
-
 (def full-schema
   [{:db/ident :swig.dispatch/handler :db/valueType :db.type/keyword :db/cardinality :db.cardinality/one}
+   {:db/ident :swig.element/maximized-element :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
    {:db/ident :swig.ref/previous-parent :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
    {:db/ident :swig.ref/parent :db/valueType :db.type/ref :db/cardinality :db.cardinality/one}
    {:db/ident :swig.ref/child :db/valueType :db.type/ref :db/cardinality :db.cardinality/many}

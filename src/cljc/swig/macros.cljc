@@ -44,14 +44,23 @@
     consequent))
 
 (defmacro def-event-ds
-  [k args & body]
+  [k & defn-args]
   (let [sym (symbol (name k))]
     (if-cljs &env
-      `(do (defn ~sym ~args ~@body)
+      `(do (defn ~sym ~@defn-args)
            (swap! swig.db/handlers assoc ~k ~sym)
            (re-posh.core/reg-event-ds ~k (fn [db# params#]
                                            (apply ~sym db# (next params#)))))
-      `(defn ~sym ~args ~@body))))
+      `(defn ~sym ~@defn-args))))
+
+(defmacro defevent [name & defn-args]
+  (let [k (keyword name)]
+    (if-cljs &env
+      `(do (defn ~name ~@defn-args)
+           (swap! swig.db/handlers assoc ~k ~name)
+           (re-posh/reg-event-ds ~k (fn [db# params#]
+                                      (apply ~name db# (next params#)))))
+      `(defn ~name ~@defn-args))))
 
 (defn compile-query [query]
   (match query

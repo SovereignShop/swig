@@ -13,6 +13,7 @@
                           :display "none"
                           :flex "1 1 0%"}
         normal-styles {:flex "1 1 0%"}]
+    (println "maximized element:" maximized-element)
     (->> [re/h-box
           :style {:flex "1 1 0%"}
           :class "swig-element"
