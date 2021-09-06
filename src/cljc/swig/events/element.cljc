@@ -80,6 +80,18 @@
               id)]
      [[:db.fn/retractAttribute elem-id :swig.element/maximized-element]])))
 
+(def-event-ds ::toggle-maximize
+  ([db] (toggle-maximize db (get-context-id db)))
+  ([db id]
+   (if-let [parent-id (d/q '[:find ?p .
+                             :in $ ?id
+                             :where
+                             [?p :swig.element/maximized-element ?id]]
+                           db
+                           id)]
+     [[:db.fn/retractAttribute parent-id :swig.element/maximized-element]]
+     (maximize db id))))
+
 (def-event-ds ::go-left
   ([db] (go-left db (get-context-id db)))
   ([db id]
