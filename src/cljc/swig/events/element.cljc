@@ -92,35 +92,68 @@
      [[:db.fn/retractAttribute parent-id :swig.element/maximized-element]]
      (maximize db id))))
 
+(defn- get-tab-sizes []
+  (for [e (.getElementsByClassName js/document "swig-leaf")]
+    {:id (long (.getAttribute e "swigid"))
+     :left (.-offsetLeft e)
+     :top (.-offsetTop e)
+     :width (.-offsetWidth e)
+     :height (.-offsetHeight e)}))
+
+(defn- find-nearest-left-tab [id]
+  (let [tab-element (.getElementById js/document (str "swig-" id))
+        l (.-offsetLeft tab-element)
+        t (.-offsetTop tab-element)]
+    (loop [nearest nil
+           [{:keys [left top] :as tab} & tabs] (get-tab-sizes)]
+      (cond (nil? tab) nearest
+            (< left l) (if (or (nil? nearest) (> left (:left nearest)))
+                         (recur tab tabs)
+                         (recur nearest tabs))
+            :else
+            (recur nearest tabs)))))
+
+(defn- find-nearest-right-tab [id]
+  (let [tab-element (.getElementById js/document (str "swig-" id))
+        l (.-offsetLeft tab-element)
+        t (.-offsetTop tab-element)]
+    (loop [nearest nil
+           [{:keys [left top] :as tab} & tabs] (get-tab-sizes)]
+      (cond (nil? tab) nearest
+            (> left l) (if (or (nil? nearest) (< left (:left nearest)))
+                         (recur tab tabs)
+                         (recur nearest tabs))
+            :else
+            (recur nearest tabs)))))
+
 (def-event-ds ::go-left
-  ([db] (go-left db (get-context-id db)))
-  ([db id]
-   (let [element (d/entity db id)
-         element-id (:db/id element)
+  ([db]
+   (go-left db (get-context-id db)))
+  ([db element-id]
+   (when-let [target-element-child-id (:id (find-nearest-left-tab element-id))]
+     (let [target-element-id (:db/id
+                              (event-utils/get-parent
+                               (d/entity db target-element-child-id)))
+           {:keys [db-after tx-data]}
+           (d/with db
+                   [[:db.fn/retractAttribute element-id :swig/has-focus?]
+                    [:db/add target-element-id :swig/has-focus? true]
+                    [:db/add context-ident :swig.context/id target-element-id]])]
+       (into tx-data cat (apply-swig-events db-after target-element-id :swig.event/focus))))))
 
-         [target-element-id]
-         (reduce (fn [ret x]
-                   (if (> (nth x 1) (nth ret 1))
-                     x
-                     ret))
-                 (d/q
-                  '[:find ?element ?left
-                    :in $ ?l ?t
-                    :where
-                    [?element :swig/type :swig.type/element]
-                    [?element :swig.element/left ?left]
-                    [?element :swig.element/top ?top]
-                    [(< ?left ?l)]
-                    [(>= ?top ?t)]]
-                  db
-                  (:swig.element/left element)
-                  (:swig.element/top element)))
-
-         {:keys [db-after tx-data]}
-         (d/with db
-                 [[:db.fn/retractAttribute element-id :swig/has-focus?]
-                  [:db/add target-element-id :swig/has-focus? true]])]
-     (when target-element-id
+(def-event-ds ::go-right
+  ([db]
+   (go-right db (get-context-id db)))
+  ([db element-id]
+   (when-let [target-element-child-id (:id (find-nearest-right-tab element-id))]
+     (let [target-element-id (:db/id
+                              (event-utils/get-parent
+                               (d/entity db target-element-child-id)))
+           {:keys [db-after tx-data]}
+           (d/with db
+                   [[:db.fn/retractAttribute element-id :swig/has-focus?]
+                    [:db/add target-element-id :swig/has-focus? true]
+                    [:db/add context-ident :swig.context/id target-element-id]])]
        (into tx-data cat (apply-swig-events db-after target-element-id :swig.event/focus))))))
 
 (def-event-ds ::close

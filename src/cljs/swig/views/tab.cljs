@@ -11,7 +11,7 @@
          ops          (:swig.element/ops props)
          container-id (str "tab-" id)]
      [re/h-box
-      :attr (:id container-id)
+      :attr {:id container-id :tabid id}
       :class "swig-tab"
       :style {:flex "1 1 0%"}
       :children
