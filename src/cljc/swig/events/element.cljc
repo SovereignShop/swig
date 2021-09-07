@@ -57,28 +57,15 @@
   ([db] (maximize db (get-context-id db)))
   ([db id]
    (let [max-elem-id
-         (d/q '[:find ?max .
+         (d/q '[:find ?id .
                 :in $ ?c %
                 :where
                 (get-ancestors ?id ?c)
-                [?id :swig.element/maximized-element ?max]]
+                [?max :swig.element/maximized-element ?id]]
               db
               id
               get-ancestors)]
      [[:db/add (or max-elem-id root-view) :swig.element/maximized-element id]])))
-
-(def-event-ds ::unmaximize
-  ([db] (unmaximize db (get-context-id db)))
-  ([db id]
-   (let [elem-id
-         (d/q '[:find ?id .
-                :in $ ?c %
-                :where
-                (get-ancestors ?c ?id)
-                [?id :swig.element/maximized-element]]
-              db
-              id)]
-     [[:db.fn/retractAttribute elem-id :swig.element/maximized-element]])))
 
 (def-event-ds ::toggle-maximize
   ([db] (toggle-maximize db (get-context-id db)))
@@ -198,25 +185,36 @@
           (for [c children]
             [:db/add gparent-id :swig.ref/child c])))))
 
+(defn- swap-references [db old-id new-id]
+  (let [refs (d/q '[:find ?i ?attr
+                    :in $ ?id
+                    :where
+                    [?i ?attr ?id]]
+                  db
+                  old-id)]
+    (for [[id attr] refs
+          fact [[:db/retract id attr old-id]
+                [:db/add id attr new-id]]]
+      fact)))
+
 (defn- divide-impl
   ([db element-id orientation]
-  (let [element (d/entity db element-id)
-        parent (event-utils/get-parent element)
-        parent-id (:db/id parent)
-        new-split-id -1
-        new-element-id -2
-        element-copy (assoc (event-utils/deep-copy element new-element-id)
-                            :swig/index (inc (:swig/index element)))
-        {after-divide :db-after tx-data :tx-data tempids :tempids}
-        (d/with db
-                [[:db/retract parent-id :swig.ref/child element-id]
-                 [:db/add parent-id :swig.ref/child new-split-id]
-                 {:db/id new-split-id
-                  :swig.ref/child [element-id element-copy]
-                  :swig/type :swig.type/split
-                  :swig.split/orientation orientation
-                  :swig.split/split-percent 50.1}])]
-    (into tx-data cat (apply-swig-events after-divide (get tempids new-element-id) :swig.event/copy)))))
+   (let [element (d/entity db element-id)
+         parent (event-utils/get-parent element)
+         parent-id (:db/id parent)
+         new-split-id -1
+         new-element-id -2
+         element-copy (assoc (event-utils/deep-copy element new-element-id)
+                             :swig/index (inc (:swig/index element)))
+         {after-divide :db-after tx-data :tx-data tempids :tempids}
+         (d/with db
+                 (into (swap-references db element-id new-split-id)
+                       [{:db/id new-split-id
+                         :swig.ref/child [element-id element-copy]
+                         :swig/type :swig.type/split
+                         :swig.split/orientation orientation
+                         :swig.split/split-percent 50.1}]))]
+     (into tx-data cat (apply-swig-events after-divide (get tempids new-element-id) :swig.event/copy)))))
 
 (def-event-ds ::divide-vertical
   ([db] (divide-vertical db (get-context-id db)))
