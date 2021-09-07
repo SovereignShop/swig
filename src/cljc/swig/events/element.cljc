@@ -143,6 +143,11 @@
                     [:db/add context-ident :swig.context/id target-element-id]])]
        (into tx-data cat (apply-swig-events db-after target-element-id :swig.event/focus))))))
 
+(defn- focus-on [db id]
+  (into [[:db/add context-ident :swig.context/id id]]
+        cat
+        (apply-swig-events db id :swig.event/focus)))
+
 (def-event-ds ::close
   ([db] (close db (get-context-id db)))
   ([db element-id]
@@ -159,10 +164,12 @@
                        db
                        parent-id
                        element-id)]
-     (into [[:db/retract parent-id :swig.ref/child element-id]
-            [:db.fn/retractEntity parent-id]]
-           (for [c children]
-             [:db/add gparent-id :swig.ref/child c])))))
+     (concat
+      [[:db/retract parent-id :swig.ref/child element-id]
+       [:db.fn/retractEntity parent-id]]
+      (focus-on db (first children))
+      (for [c children]
+        [:db/add gparent-id :swig.ref/child c])))))
 
 (def-event-ds ::delete
   ([db] (delete db (get-context-id db)))
@@ -180,10 +187,12 @@
                       db
                       parent-id
                       element-id)]
-    (into [[:db.fn/retractEntity element-id]
-           [:db.fn/retractEntity parent-id]]
-          (for [c children]
-            [:db/add gparent-id :swig.ref/child c])))))
+     (concat
+      [[:db.fn/retractEntity element-id]
+       [:db.fn/retractEntity parent-id]]
+      (focus-on db (first children))
+      (for [c children]
+        [:db/add gparent-id :swig.ref/child c])))))
 
 (defn- swap-references [db old-id new-id]
   (let [refs (d/q '[:find ?i ?attr
@@ -201,20 +210,23 @@
   ([db element-id orientation]
    (let [element (d/entity db element-id)
          parent (event-utils/get-parent element)
-         parent-id (:db/id parent)
          new-split-id -1
          new-element-id -2
-         element-copy (assoc (event-utils/deep-copy element new-element-id)
-                             :swig/index (inc (:swig/index element)))
+         element-copy (event-utils/deep-copy element new-element-id)
          {after-divide :db-after tx-data :tx-data tempids :tempids}
          (d/with db
                  (into (swap-references db element-id new-split-id)
                        [{:db/id new-split-id
+                         :swig/index (:swig/index element)
                          :swig.ref/child [element-id element-copy]
                          :swig/type :swig.type/split
                          :swig.split/orientation orientation
-                         :swig.split/split-percent 50.1}]))]
-     (into tx-data cat (apply-swig-events after-divide (get tempids new-element-id) :swig.event/copy)))))
+                         :swig.split/split-percent 50.1}
+                        [:db/add element-id :swig/index 0]
+                        [:db/add new-element-id :swig/index 1]]))]
+     (into (conj tx-data [:db/add context-ident :swig.context/id (get tempids new-element-id)])
+           cat
+           (apply-swig-events after-divide (get tempids new-element-id) :swig.event/copy)))))
 
 (def-event-ds ::divide-vertical
   ([db] (divide-vertical db (get-context-id db)))
