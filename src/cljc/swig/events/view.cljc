@@ -103,24 +103,6 @@
             (for [tab-id tab-ids]
               [:db/add view-id :swig.ref/child tab-id]))))
 
-(defn copy-editor [db id]
-  (let [editor (d/entity db id)
-        parent (event-utils/get-parent editor)
-        parent-id (:db/id parent)
-        document (:editor/document editor)]
-    [[:db/retract parent-id :swig.ref/child id]
-     (-> (into {} editor)
-         (assoc
-          :db/id -1
-          :editor/document
-          (-> (into {} document)
-              (assoc
-               :db/id -2
-               :editor.doc/linked-to (:db/id document))
-              (update :editor.doc/cursor :db/id)))
-         (update :swig/event #(mapv :db/id %))
-         (dissoc :cursor/token))]))
-
 (m/def-event-ds :swig.events.view/divide-view
   [db view-id orientation]
   (let [view (d/entity db view-id)
