@@ -64,8 +64,12 @@
                 [?max :swig.element/maximized-element ?id]]
               db
               id
-              get-ancestors)]
-     [[:db/add (or max-elem-id root-view) :swig.element/maximized-element id]])))
+              get-ancestors)
+         parent-id (:db/id (event-utils/get-parent (d/entity db id)))]
+     [[:db/add (or max-elem-id root-view) :swig.element/maximized-element id]
+      [:db/retract parent-id :swig.ref/child id]
+      [:db/add id :swig.ref/previous-parent parent-id]
+      [:db/add (-> (d/entity db id) :swig.ref/child first :db/id) :swig.element/maximized true]])))
 
 (def-event-ds ::toggle-maximize
   ([db] (toggle-maximize db (get-context-id db)))
@@ -76,7 +80,9 @@
                              [?p :swig.element/maximized-element ?id]]
                            db
                            id)]
-     [[:db.fn/retractAttribute parent-id :swig.element/maximized-element]]
+     [[:db.fn/retractAttribute parent-id :swig.element/maximized-element]
+      [:db.fn/retractAttribute id :swig.ref/previous-parent]
+      [:db/add (-> (d/entity db id) :swig.ref/previous-parent :db/id) :swig.ref/child id]]
      (maximize db id))))
 
 (defn- get-tab-sizes []
