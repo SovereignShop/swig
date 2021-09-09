@@ -3,13 +3,11 @@
      (:require-macros
       [swig.macros :refer [def-event-ds defevent]]))
   (:require
-   [swig.events.utils :as event-utils]
+   [swig.events.rules :refer [get-ancestors get-descendants]]
+   [swig.events.utils :as eu :refer [context-ident get-context-id]]
    [swig.db :as db]
    [datascript.core :as d]
    #?(:clj [swig.macros :refer [def-event-ds defevent]])))
-
-(def context-ident
-  [:swig/ident :swig.ident/context])
 
 (def-event-ds ::set-context
   [_ id]
@@ -17,23 +15,6 @@
     :swig.context/id id}])
 
 (def root-view [:swig/ident :swig/root-view])
-
-(defn get-context-id [db]
-  (:swig.context/id (d/entity db context-ident)))
-
-(def get-descendants
-  '[[(get-descendants ?parent ?child)
-     [?parent :swig.ref/child ?child]]
-    [(get-descendants ?parent ?child)
-     [?parent :swig.ref/child ?p]
-     (get-descendants ?p ?child)]])
-
-(def get-ancestors
-  '[[(get-ancestors ?gp ?p)
-     [?gp :swig.ref/child ?p]]
-    [(get-ancestors ?gp ?p)
-     [?ggp :swig.ref/child ?gp]
-     (get-ancestors ?ggp ?p)]])
 
 (defn apply-swig-events [db id event]
   (let [events
@@ -65,7 +46,7 @@
               db
               id
               get-ancestors)
-         parent-id (:db/id (event-utils/get-parent (d/entity db id)))]
+         parent-id (:db/id (eu/get-parent (d/entity db id)))]
      [[:db/add (or max-elem-id root-view) :swig.element/maximized-element id]
       [:db/retract parent-id :swig.ref/child id]
       [:db/add id :swig.ref/previous-parent parent-id]
@@ -125,7 +106,7 @@
   ([db element-id]
    (when-let [target-element-child-id (:id (find-nearest-left-tab element-id))]
      (let [target-element-id (:db/id
-                              (event-utils/get-parent
+                              (eu/get-parent
                                (d/entity db target-element-child-id)))
            {:keys [db-after tx-data]}
            (d/with db
@@ -140,7 +121,7 @@
   ([db element-id]
    (when-let [target-element-child-id (:id (find-nearest-right-tab element-id))]
      (let [target-element-id (:db/id
-                              (event-utils/get-parent
+                              (eu/get-parent
                                (d/entity db target-element-child-id)))
            {:keys [db-after tx-data]}
            (d/with db
@@ -158,9 +139,9 @@
   ([db] (close db (get-context-id db)))
   ([db element-id]
    (let [element (d/entity db element-id)
-         parent (event-utils/get-parent element)
+         parent (eu/get-parent element)
          parent-id (:db/id parent)
-         gparent (event-utils/get-parent parent)
+         gparent (eu/get-parent parent)
          gparent-id (:db/id gparent)
          children (d/q '[:find [?c ...]
                          :in $ ?id ?exclude
@@ -181,9 +162,9 @@
   ([db] (delete db (get-context-id db)))
   ([db element-id]
    (let [element (d/entity db element-id)
-        parent (event-utils/get-parent element)
+        parent (eu/get-parent element)
         parent-id (:db/id parent)
-        gparent (event-utils/get-parent parent)
+        gparent (eu/get-parent parent)
         gparent-id (:db/id gparent)
         children (d/q '[:find [?c ...]
                         :in $ ?id ?exclude
@@ -215,10 +196,10 @@
 (defn- divide-impl
   ([db element-id orientation]
    (let [element (d/entity db element-id)
-         parent (event-utils/get-parent element)
+         parent (eu/get-parent element)
          new-split-id -1
          new-element-id -2
-         element-copy (event-utils/deep-copy element new-element-id)
+         element-copy (eu/deep-copy element new-element-id)
          {after-divide :db-after tx-data :tx-data tempids :tempids}
          (d/with db
                  (into (swap-references db element-id new-split-id)

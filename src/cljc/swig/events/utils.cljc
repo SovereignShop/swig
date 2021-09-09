@@ -3,6 +3,11 @@
    [datascript.db :as db]
    [datascript.core :as d]))
 
+(def context-ident
+  [:swig/ident :swig.ident/context])
+
+(defn get-context-id [db]
+  (:swig.context/id (d/entity db context-ident)))
 
 (defn get-parent [entity]
   (let [db (d/entity-db entity)
